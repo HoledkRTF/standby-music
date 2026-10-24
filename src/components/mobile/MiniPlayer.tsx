@@ -26,7 +26,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const isPlaying = status === 'playing';
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40">
+    <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom,16px))] left-4 right-4 max-w-lg mx-auto z-40">
       <div className="relative overflow-hidden bg-black/60 backdrop-blur-2xl border border-white/15 rounded-3xl p-3 shadow-2xl flex items-center justify-between">
         {/* Track Thumbnail and Info */}
         <div

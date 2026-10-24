@@ -31,9 +31,9 @@ export const PortraitView: React.FC<PortraitViewProps> = ({
   onToggleFullscreen,
 }) => {
   return (
-    <div className="relative min-h-[100dvh] w-full max-w-lg mx-auto px-4 pt-6 pb-32 flex flex-col space-y-6">
+    <div className="relative min-h-[100dvh] w-full max-w-lg mx-auto px-4 pt-[max(3.75rem,env(safe-area-inset-top,60px))] pb-[max(8.5rem,env(safe-area-inset-bottom,36px))] flex flex-col space-y-6 select-none">
       {/* Top Header */}
-      <header className="flex items-center justify-between pt-2">
+      <header className="flex items-center justify-between">
         <div className="flex items-center space-x-2.5">
           <div className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-sm">
             <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
