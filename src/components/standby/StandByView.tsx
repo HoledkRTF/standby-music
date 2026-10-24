@@ -301,7 +301,7 @@ export const StandByView: React.FC<StandByViewProps> = ({
           : 'bg-[#5c5d5d]/75 dark:bg-[#2c2d2e]/80 backdrop-blur-3xl'
       } ${
         isLandscape
-          ? 'flex flex-row items-center justify-between pl-[max(5.5rem,env(safe-area-inset-left,88px))] pr-[max(3rem,env(safe-area-inset-right,48px))] py-[max(1.75rem,env(safe-area-inset-top,28px))] pb-[max(1.75rem,env(safe-area-inset-bottom,28px))]'
+          ? 'flex flex-row items-center justify-between pl-[max(4.25rem,env(safe-area-inset-left,68px))] pr-[max(4.25rem,env(safe-area-inset-right,68px))] py-[max(1.5rem,env(safe-area-inset-top,24px))] pb-[max(1.5rem,env(safe-area-inset-bottom,24px))]'
           : 'flex flex-col items-center justify-between p-6 pt-[max(2.5rem,env(safe-area-inset-top,40px))] pb-[max(2.5rem,env(safe-area-inset-bottom,40px))]'
       }`}
     >
@@ -323,7 +323,7 @@ export const StandByView: React.FC<StandByViewProps> = ({
       {/* Right Column: Apple StandBy Player Controls or Synced Lyrics */}
       <div
         className={`${
-          isLandscape ? 'flex-1 h-full max-h-[370px] pl-8 sm:pl-12 pr-1' : 'w-full max-w-md pt-4'
+          isLandscape ? 'flex-1 h-full max-h-[370px] pl-6 sm:pl-10 pr-1' : 'w-full max-w-md pt-4'
         } flex flex-col justify-between`}
       >
         {isLyricsOpen ? (
