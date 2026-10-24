@@ -5,6 +5,7 @@ import { Track, Playlist, PlayerState } from '@/types/music';
 import { INITIAL_PLAYLISTS, CURATED_TRACKS } from '@/data/musicData';
 import { PlaylistDetailModal } from './PlaylistDetailModal';
 import { NewPlaylistModal } from './NewPlaylistModal';
+import { EqualizerBars } from '../standby/EqualizerBars';
 import { formatTime } from '@/utils/youtube';
 
 interface YouTubeMusicViewProps {
@@ -59,6 +60,16 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Dynamic greeting based on user time of day
+  const [greeting, setGreeting] = useState('Good vibes');
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setGreeting('Good morning');
+    else if (hour >= 12 && hour < 17) setGreeting('Good afternoon');
+    else if (hour >= 17 && hour < 22) setGreeting('Good evening');
+    else setGreeting('Late night vibes');
+  }, []);
+
   // Save custom playlists to localStorage
   const handleCreatePlaylist = (newPl: Playlist) => {
     const updated = [newPl, ...playlists];
@@ -111,23 +122,23 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       : 0;
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#030303] text-white flex flex-col justify-between overflow-x-hidden select-none">
+    <div className="relative min-h-[100dvh] w-full bg-[#030303] text-white flex flex-col justify-between overflow-x-hidden select-none font-sans">
       {/* Top YouTube Music Bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top,14px))] pb-3 bg-[#030303]/90 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center space-x-2">
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top,14px))] pb-3 bg-[#030303]/90 backdrop-blur-2xl border-b border-white/5">
+        <div className="flex items-center space-x-2.5">
           {/* Authentic YouTube Music Logo */}
-          <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center shadow-md">
-            <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+          <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
+            <svg className="w-3.5 h-3.5 fill-white ml-0.5" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
             </svg>
           </div>
-          <span className="text-lg font-bold tracking-tight text-white flex items-center">
+          <span className="text-xl font-bold tracking-tight text-white flex items-center">
             Music
           </span>
         </div>
 
         <div className="flex items-center space-x-2">
-          {/* Quick Search toggle */}
+          {/* Search tab toggle */}
           <button
             onClick={() => setActiveTab('search')}
             className={`p-2 rounded-full hover:bg-white/10 active:scale-95 transition-all ${
@@ -143,12 +154,12 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
           {/* StandBy Mode Pill Button */}
           <button
             onClick={onEnterStandBy}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-md border border-white/10 transition-all active:scale-95 shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-md border border-white/10 transition-all active:scale-95 shadow-sm"
             title="Rotate phone or tap for Apple StandBy Display"
           >
             <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24">
-              <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth="2" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h8" />
+              <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth={2} />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8" />
             </svg>
             <span>StandBy</span>
           </button>
@@ -156,10 +167,10 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       </header>
 
       {/* Main Body by Tab */}
-      <main className="flex-1 overflow-y-auto px-4 pb-36 space-y-7 pt-3 max-w-lg mx-auto w-full">
-        {/* Category Pills (Home & Explore) */}
+      <main className="flex-1 overflow-y-auto px-4 pb-36 space-y-7 pt-2 max-w-lg mx-auto w-full">
+        {/* Category Filter Pills (Home & Explore) */}
         {activeTab !== 'search' && (
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
+          <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 pt-1">
             {(
               [
                 { id: 'all', label: 'All' },
@@ -177,7 +188,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 onClick={() => setActiveCategory(cat.id)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all active:scale-95 ${
                   activeCategory === cat.id
-                    ? 'bg-white text-black shadow-md'
+                    ? 'bg-white text-black shadow-md font-bold'
                     : 'bg-white/10 text-white/80 hover:bg-white/15'
                 }`}
               >
@@ -190,6 +201,13 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
         {/* ===================== TAB: HOME ===================== */}
         {activeTab === 'home' && (
           <div className="space-y-8 animate-fadeIn">
+            {/* Quick Greeting */}
+            <div className="flex items-center justify-between pt-1">
+              <h2 className="text-2xl font-black tracking-tight text-white">
+                {greeting}
+              </h2>
+            </div>
+
             {/* Quick Picks / Start Radio */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
@@ -197,54 +215,54 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">
                     START RADIO FROM A SONG
                   </p>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Quick picks</h2>
+                  <h3 className="text-xl font-bold text-white tracking-tight">Quick picks</h3>
                 </div>
                 <button
                   onClick={() => onPlayPlaylist(CURATED_TRACKS, 0)}
-                  className="text-xs font-semibold text-white/60 hover:text-white px-2.5 py-1 rounded-full border border-white/15"
+                  className="text-xs font-semibold text-white/60 hover:text-white px-3 py-1 rounded-full border border-white/15 active:scale-95 transition-all"
                 >
                   Play all
                 </button>
               </div>
 
-              {/* 4-row song list */}
+              {/* Song list with live equalizer indicator */}
               <div className="grid grid-cols-1 gap-2">
-                {CURATED_TRACKS.slice(0, 5).map((track, idx) => {
+                {CURATED_TRACKS.slice(0, 5).map((track) => {
                   const isCurrent = track.id === currentTrack?.id;
                   return (
                     <div
                       key={track.id}
                       onClick={() => onSelectTrack(track)}
-                      className={`flex items-center justify-between p-2 rounded-xl hover:bg-white/10 active:bg-white/15 transition-all cursor-pointer ${
-                        isCurrent ? 'bg-white/10 border border-white/10' : ''
+                      className={`flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/10 active:bg-white/15 transition-all cursor-pointer group ${
+                        isCurrent ? 'bg-white/10 border border-white/15' : 'bg-transparent'
                       }`}
                     >
-                      <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-white/5 relative group">
+                      <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/5 relative shadow-sm">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={track.thumbnail}
                             alt={track.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           {isCurrent && isPlaying ? (
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                              <EqualizerBars isPlaying={true} />
                             </div>
                           ) : null}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-red-400' : 'text-white'}`}>
+                          <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-red-400 font-bold' : 'text-white'}`}>
                             {track.title}
                           </p>
-                          <p className="text-xs text-white/50 truncate mt-0.5">
+                          <p className="text-xs text-white/50 truncate mt-0.5 font-medium">
                             {track.artist}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center space-x-2 pl-3">
-                        <span className="text-xs font-mono text-white/40">
+                        <span className="text-xs font-mono tabular-nums text-white/40">
                           {formatTime(track.duration)}
                         </span>
                         <button
@@ -252,7 +270,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                             e.stopPropagation();
                             onAddToQueue(track);
                           }}
-                          className="p-1.5 text-white/40 hover:text-white rounded-full hover:bg-white/10"
+                          className="p-1.5 text-white/40 hover:text-white rounded-full hover:bg-white/10 active:scale-90 transition-transform"
                           title="Add to queue"
                         >
                           <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
@@ -273,37 +291,38 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">
                     RECOMMENDED MIXES
                   </p>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Mixed for you</h2>
+                  <h3 className="text-xl font-bold text-white tracking-tight">Mixed for you</h3>
                 </div>
                 <button
                   onClick={() => setShowNewPlaylistModal(true)}
-                  className="text-xs font-semibold text-white/60 hover:text-white flex items-center space-x-1"
+                  className="text-xs font-semibold text-white/60 hover:text-white flex items-center space-x-1 active:scale-95 transition-all"
                 >
                   <span>+ Custom</span>
                 </button>
               </div>
 
-              {/* Horizontal Scroll Playlists */}
+              {/* Horizontal Scroll Playlists with rich card design */}
               <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4">
                 {filteredPlaylists.map((pl) => (
                   <div
                     key={pl.id}
                     onClick={() => setSelectedPlaylist(pl)}
-                    className="w-40 sm:w-44 shrink-0 space-y-2 cursor-pointer group"
+                    className="w-40 sm:w-44 shrink-0 space-y-2 cursor-pointer group active:scale-[0.98] transition-transform"
                   >
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 group-hover:border-white/30 transition-all">
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-xl border border-white/10 group-hover:border-white/30 transition-all">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={pl.coverUrl}
                         alt={pl.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onPlayPlaylist(pl.tracks, 0);
                         }}
-                        className="absolute bottom-2.5 right-2.5 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-opacity active:scale-95"
+                        className="absolute bottom-2.5 right-2.5 w-10 h-10 rounded-full bg-black/85 hover:bg-red-600 text-white flex items-center justify-center shadow-xl opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all active:scale-95"
                         title="Play Playlist"
                       >
                         <svg className="w-4 h-4 fill-white ml-0.5" viewBox="0 0 24 24">
@@ -313,9 +332,9 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-bold text-white truncate leading-tight">
+                      <h4 className="text-sm font-bold text-white truncate leading-tight">
                         {pl.title}
-                      </h3>
+                      </h4>
                       <p className="text-xs text-white/50 truncate mt-0.5 font-medium">
                         {pl.description}
                       </p>
@@ -331,7 +350,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">
                   WHAT&apos;S POPULAR
                 </p>
-                <h2 className="text-xl font-bold text-white tracking-tight">Trending worldwide</h2>
+                <h3 className="text-xl font-bold text-white tracking-tight">Trending worldwide</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -339,19 +358,19 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   <div
                     key={track.id}
                     onClick={() => onSelectTrack(track)}
-                    className="p-3 bg-white/5 hover:bg-white/10 active:bg-white/15 rounded-2xl border border-white/5 transition-all cursor-pointer space-y-2"
+                    className="p-3 bg-white/5 hover:bg-white/10 active:bg-white/15 rounded-2xl border border-white/5 transition-all cursor-pointer space-y-2 group"
                   >
-                    <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-white/10">
+                    <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-white/10 shadow-sm">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={track.thumbnail}
                         alt={track.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-white truncate">{track.title}</p>
-                      <p className="text-[11px] text-white/50 truncate">{track.artist}</p>
+                      <p className="text-[11px] text-white/50 truncate font-medium">{track.artist}</p>
                     </div>
                   </div>
                 ))}
@@ -363,11 +382,11 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
         {/* ===================== TAB: EXPLORE ===================== */}
         {activeTab === 'explore' && (
           <div className="space-y-8 animate-fadeIn">
-            {/* Explore Top Banner */}
+            {/* Explore Top Banners */}
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div
                 onClick={() => onEnterCinemaMode()}
-                className="p-4 rounded-2xl bg-gradient-to-br from-amber-600/40 to-black border border-amber-500/20 cursor-pointer active:scale-98 transition-all"
+                className="p-4 rounded-2xl bg-gradient-to-br from-amber-600/35 to-zinc-900 border border-amber-500/20 cursor-pointer active:scale-95 transition-all shadow-lg"
               >
                 <div className="flex items-center space-x-2 text-amber-300 font-bold text-sm">
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -380,14 +399,14 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
 
               <div
                 onClick={() => onEnterStandBy()}
-                className="p-4 rounded-2xl bg-gradient-to-br from-blue-600/40 to-black border border-blue-500/20 cursor-pointer active:scale-98 transition-all"
+                className="p-4 rounded-2xl bg-gradient-to-br from-blue-600/35 to-zinc-900 border border-blue-500/20 cursor-pointer active:scale-95 transition-all shadow-lg"
               >
                 <div className="flex items-center space-x-2 text-blue-300 font-bold text-sm">
                   <svg className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24">
-                    <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth="2" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h8" />
+                    <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth={2} />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8" />
                   </svg>
-                  <span>StandBy Display</span>
+                  <span>StandBy</span>
                 </div>
                 <p className="text-xs text-white/60 mt-1">Authentic Apple StandBy widget</p>
               </div>
@@ -395,7 +414,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
 
             {/* Moods and Genres */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-white">Moods & Genres</h2>
+              <h3 className="text-xl font-bold text-white">Moods & Genres</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {[
                   { name: 'Pop Hits', color: 'from-pink-600/50' },
@@ -412,7 +431,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                         setSelectedPlaylist(playlists[idx % playlists.length]);
                       }
                     }}
-                    className={`h-20 rounded-2xl bg-gradient-to-br ${genre.color} to-zinc-900 border border-white/10 p-3 flex flex-col justify-end cursor-pointer hover:border-white/30 active:scale-95 transition-all`}
+                    className={`h-20 rounded-2xl bg-gradient-to-br ${genre.color} to-zinc-900 border border-white/10 p-3 flex flex-col justify-end cursor-pointer hover:border-white/30 active:scale-95 transition-all shadow-md`}
                   >
                     <span className="text-sm font-bold text-white">{genre.name}</span>
                   </div>
@@ -426,10 +445,10 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
         {activeTab === 'library' && (
           <div className="space-y-6 animate-fadeIn">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Playlists & Library</h2>
+              <h2 className="text-2xl font-black text-white tracking-tight">Your Library</h2>
               <button
                 onClick={() => setShowNewPlaylistModal(true)}
-                className="px-3.5 py-1.5 bg-white text-black text-xs font-bold rounded-full shadow hover:bg-white/90 active:scale-95 transition-all flex items-center space-x-1"
+                className="px-3.5 py-1.5 bg-white text-black text-xs font-bold rounded-full shadow-lg hover:bg-white/90 active:scale-95 transition-all flex items-center space-x-1"
               >
                 <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -444,20 +463,20 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 <div
                   key={pl.id}
                   onClick={() => setSelectedPlaylist(pl)}
-                  className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/5 transition-all cursor-pointer"
+                  className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/5 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-white/10 border border-white/10">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-white/10 border border-white/10 shadow-sm">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={pl.coverUrl}
                         alt={pl.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-sm font-bold text-white truncate">{pl.title}</h4>
-                      <p className="text-xs text-white/50 truncate mt-0.5">
+                      <p className="text-xs text-white/50 truncate mt-0.5 font-medium">
                         {pl.creator} • {pl.tracks.length} songs
                       </p>
                     </div>
@@ -468,7 +487,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                       e.stopPropagation();
                       onPlayPlaylist(pl.tracks, 0);
                     }}
-                    className="p-2.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white active:scale-90 transition-all"
+                    className="p-2.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white active:scale-90 transition-transform"
                     title="Play"
                   >
                     <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
@@ -497,7 +516,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search songs, artists, albums, or paste YouTube link..."
-                className="w-full pl-10 pr-10 py-3 bg-white/10 text-white placeholder-white/40 rounded-2xl text-sm font-medium outline-none border border-white/15 focus:border-white/35 transition-all"
+                className="w-full pl-10 pr-10 py-3 bg-white/10 text-white placeholder-white/40 rounded-2xl text-sm font-medium outline-none border border-white/15 focus:border-white/35 transition-all shadow-inner"
               />
               {searchQuery && (
                 <button
@@ -523,25 +542,25 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   <div
                     key={track.id}
                     onClick={() => onSelectTrack(track)}
-                    className="flex items-center justify-between p-2 rounded-xl hover:bg-white/10 active:bg-white/15 transition-all cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-2xl hover:bg-white/10 active:bg-white/15 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-white/10">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/10 shadow-sm">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={track.thumbnail}
                           alt={track.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-white truncate">{track.title}</p>
-                        <p className="text-xs text-white/50 truncate mt-0.5">{track.artist}</p>
+                        <p className="text-xs text-white/50 truncate mt-0.5 font-medium">{track.artist}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-2 pl-3">
-                      <span className="text-xs font-mono text-white/40">
+                      <span className="text-xs font-mono tabular-nums text-white/40">
                         {formatTime(track.duration)}
                       </span>
                       <button
@@ -549,7 +568,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                           e.stopPropagation();
                           onAddToQueue(track);
                         }}
-                        className="p-1.5 text-white/40 hover:text-white rounded-full hover:bg-white/10"
+                        className="p-1.5 text-white/40 hover:text-white rounded-full hover:bg-white/10 active:scale-90 transition-transform"
                         title="Add to queue"
                       >
                         <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
@@ -570,7 +589,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                     <button
                       key={term}
                       onClick={() => setSearchQuery(term)}
-                      className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-xs text-white/80"
+                      className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-xs text-white/80 active:scale-95 transition-transform"
                     >
                       {term}
                     </button>
@@ -583,11 +602,11 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       </main>
 
       {/* ===================== DOCKED MINI PLAYER & BOTTOM NAV ===================== */}
-      <footer className="fixed bottom-0 left-0 right-0 z-30 bg-[#121214]/95 backdrop-blur-2xl border-t border-white/10 flex flex-col">
+      <footer className="fixed bottom-0 left-0 right-0 z-30 bg-[#101012]/95 backdrop-blur-3xl border-t border-white/10 flex flex-col">
         {/* Scrubber progress line on top of mini-player */}
         <div className="w-full h-0.5 bg-white/10 overflow-hidden">
           <div
-            className="h-full bg-white transition-[width] duration-200"
+            className="h-full bg-white transition-[width] duration-150"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -599,7 +618,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-white/5 active:bg-white/10 transition-colors"
           >
             <div className="flex items-center space-x-3 min-w-0 flex-1">
-              <div className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-white/10 shadow-sm">
+              <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-white/10 shadow-sm border border-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={currentTrack.thumbnail}
@@ -608,10 +627,13 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-white truncate leading-tight">
-                  {currentTrack.title}
-                </p>
-                <p className="text-[11px] text-white/50 truncate mt-0.5">
+                <div className="flex items-center space-x-2">
+                  <p className="text-xs font-bold text-white truncate leading-tight">
+                    {currentTrack.title}
+                  </p>
+                  {isPlaying && <EqualizerBars isPlaying={true} />}
+                </div>
+                <p className="text-[11px] text-white/50 truncate mt-0.5 font-medium">
                   {currentTrack.artist}
                 </p>
               </div>
@@ -624,7 +646,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   e.stopPropagation();
                   onTogglePlay();
                 }}
-                className="p-2 text-white hover:scale-105 active:scale-95 transition-transform"
+                className="p-2 text-white hover:scale-105 active:scale-90 transition-transform"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -643,7 +665,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   e.stopPropagation();
                   onNextTrack();
                 }}
-                className="p-2 text-white/80 hover:text-white hover:scale-105 active:scale-95 transition-transform"
+                className="p-2 text-white/80 hover:text-white hover:scale-105 active:scale-90 transition-transform"
                 title="Next"
               >
                 <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
@@ -654,8 +676,8 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
           </div>
         )}
 
-        {/* 3-Tab YouTube Music Bottom Navigation */}
-        <nav className="flex items-center justify-around py-2 border-t border-white/5 pb-[max(0.5rem,env(safe-area-inset-bottom,8px))]">
+        {/* 4-Tab YouTube Music Bottom Navigation */}
+        <nav className="flex items-center justify-around py-2 border-t border-white/5 pb-[max(0.6rem,env(safe-area-inset-bottom,10px))]">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex flex-col items-center space-y-1 py-1 px-4 transition-all ${
@@ -665,7 +687,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
             </svg>
-            <span className="text-[10px] font-medium">Home</span>
+            <span className="text-[10px] font-semibold">Home</span>
           </button>
 
           <button
@@ -678,7 +700,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
               <circle cx="12" cy="12" r="10" strokeWidth={2} />
               <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
             </svg>
-            <span className="text-[10px] font-medium">Explore</span>
+            <span className="text-[10px] font-semibold">Explore</span>
           </button>
 
           <button
@@ -690,7 +712,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
               <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zm-7-2h2v-4h2V6h-4v6z" />
             </svg>
-            <span className="text-[10px] font-medium">Library</span>
+            <span className="text-[10px] font-semibold">Library</span>
           </button>
 
           <button
@@ -702,7 +724,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             <svg className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <span className="text-[10px] font-medium">Search</span>
+            <span className="text-[10px] font-semibold">Search</span>
           </button>
         </nav>
       </footer>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlbumArt } from './AlbumArt';
 import { SyncedLyrics } from './SyncedLyrics';
+import { EqualizerBars } from './EqualizerBars';
 import { PlayerState, LyricsData } from '../../types/music';
 import { formatTime, formatRemainingTime } from '../../utils/youtube';
 
@@ -337,12 +338,17 @@ export const StandByView: React.FC<StandByViewProps> = ({
           />
         ) : (
           <>
-            {/* Top Row: Volume, AirPlay/Fullscreen, Lyrics, Cinema, Night, Close */}
+            {/* Top Row: Equalizer status, Volume, AirPlay/Fullscreen, Lyrics, Cinema, Night, Close */}
             <div
               className={`flex items-center justify-end space-x-3.5 text-white/70 ${
                 isNightMode ? 'text-red-400' : ''
               }`}
             >
+              {isPlaying && (
+                <div className="mr-auto">
+                  <EqualizerBars isPlaying={true} isNightMode={isNightMode} />
+                </div>
+              )}
               {/* Speaker Volume / Mute */}
               {onToggleMute && (
                 <button
@@ -464,8 +470,10 @@ export const StandByView: React.FC<StandByViewProps> = ({
                 {/* Play / Pause (Solid ❚❚ or ▶, NO circle border) */}
                 <button
                   onClick={onTogglePlay}
-                  className={`p-1 transition-transform active:scale-90 hover:scale-105 ${
-                    isNightMode ? 'text-red-500' : 'text-white'
+                  className={`p-1 transition-all active:scale-90 hover:scale-105 ${
+                    isNightMode
+                      ? 'text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.5)]'
+                      : 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]'
                   }`}
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
@@ -514,7 +522,7 @@ export const StandByView: React.FC<StandByViewProps> = ({
               </div>
 
               <div
-                className={`flex justify-between items-center text-xs sm:text-sm font-medium font-mono pt-1.5 px-0.5 ${
+                className={`flex justify-between items-center text-xs sm:text-sm font-medium font-mono tabular-nums pt-1.5 px-0.5 ${
                   isNightMode ? 'text-red-400/70' : 'text-white/50'
                 }`}
               >
