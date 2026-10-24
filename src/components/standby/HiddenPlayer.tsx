@@ -4,12 +4,21 @@ import React, { useEffect, useRef } from 'react';
 
 interface HiddenPlayerProps {
   videoId?: string;
+  isCinemaMode?: boolean;
   onReady: (event: any) => void;
   onStateChange: (event: any) => void;
   onError: (event: any) => void;
+  onScreenTap?: () => void;
 }
 
-export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({ videoId, onReady, onStateChange, onError }) => {
+export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
+  videoId,
+  isCinemaMode = false,
+  onReady,
+  onStateChange,
+  onError,
+  onScreenTap,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerInstanceRef = useRef<any>(null);
 
@@ -18,14 +27,14 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({ videoId, onReady, on
       if (typeof window !== 'undefined' && window.YT && window.YT.Player && containerRef.current) {
         try {
           playerInstanceRef.current = new window.YT.Player(containerRef.current, {
-            height: '1',
-            width: '1',
+            height: '100%',
+            width: '100%',
             videoId: videoId || '',
             playerVars: {
               autoplay: 1,
               controls: 0,
               disablekb: 1,
-              fs: 0,
+              fs: 1,
               modestbranding: 1,
               playsinline: 1,
               rel: 0,
@@ -66,20 +75,30 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({ videoId, onReady, on
 
   return (
     <div
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        bottom: -200,
-        right: -200,
-        width: 1,
-        height: 1,
-        opacity: 0.001,
-        pointerEvents: 'none',
-        overflow: 'hidden',
-        zIndex: -999,
-      }}
+      aria-hidden={!isCinemaMode}
+      className={
+        isCinemaMode
+          ? 'fixed inset-0 z-10 w-full h-[100dvh] bg-black flex items-center justify-center overflow-hidden transition-all duration-300'
+          : 'fixed -bottom-[300px] -right-[300px] w-px h-px opacity-0 pointer-events-none overflow-hidden -z-50'
+      }
     >
-      <div ref={containerRef} id="youtube-standby-player-element" />
+      {/* Video Container centered with cinema aspect ratio */}
+      <div className="relative w-full h-full flex items-center justify-center">
+        <div
+          ref={containerRef}
+          id="youtube-standby-player-element"
+          className="w-full h-full max-w-full max-h-full object-contain"
+        />
+
+        {/* Transparent touch/click overlay to capture screen taps in cinema mode without iframe intercepting */}
+        {isCinemaMode && (
+          <div
+            onClick={onScreenTap}
+            className="absolute inset-0 z-20 cursor-pointer bg-transparent"
+            title="Tap to toggle movie controls"
+          />
+        )}
+      </div>
     </div>
   );
 };

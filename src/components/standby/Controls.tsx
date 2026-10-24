@@ -8,6 +8,8 @@ interface ControlsProps {
   isRepeat: boolean;
   isNightMode: boolean;
   isLyricsOpen: boolean;
+  isCinemaMode?: boolean;
+  isFullscreen?: boolean;
   isLandscape?: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
@@ -16,6 +18,8 @@ interface ControlsProps {
   onToggleRepeat: () => void;
   onToggleNightMode: () => void;
   onToggleLyrics: () => void;
+  onToggleCinemaMode?: () => void;
+  onToggleFullscreen?: () => void;
   onExitStandBy: () => void;
 }
 
@@ -25,6 +29,8 @@ export const Controls: React.FC<ControlsProps> = ({
   isRepeat,
   isNightMode,
   isLyricsOpen,
+  isCinemaMode = false,
+  isFullscreen = false,
   isLandscape = false,
   onTogglePlay,
   onNext,
@@ -33,6 +39,8 @@ export const Controls: React.FC<ControlsProps> = ({
   onToggleRepeat,
   onToggleNightMode,
   onToggleLyrics,
+  onToggleCinemaMode,
+  onToggleFullscreen,
   onExitStandBy,
 }) => {
   return (
@@ -128,13 +136,13 @@ export const Controls: React.FC<ControlsProps> = ({
         </button>
       </div>
 
-      {/* Secondary Bar: Lyrics, Night Mode, and Exit StandBy */}
+      {/* Secondary Bar: Lyrics, Cinema Mode, Night Mode, Fullscreen, and Exit */}
       <div className={`flex items-center justify-between px-1 border-t border-white/10 ${isLandscape ? 'pt-1.5' : 'pt-2'}`}>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
           {/* Lyrics Button */}
           <button
             onClick={onToggleLyrics}
-            className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md transition-all active:scale-95 ${
+            className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md transition-all active:scale-95 ${
               isLyricsOpen
                 ? isNightMode
                   ? 'bg-red-600 text-black'
@@ -143,7 +151,7 @@ export const Controls: React.FC<ControlsProps> = ({
                 ? 'bg-red-950/50 text-red-500 hover:bg-red-900/60 border border-red-800/40'
                 : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
             }`}
-            title="Lyrics"
+            title="Synced Lyrics"
           >
             <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24">
               <path
@@ -153,40 +161,89 @@ export const Controls: React.FC<ControlsProps> = ({
                 d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <span>Lyrics</span>
+            <span className="hidden sm:inline">Lyrics</span>
           </button>
+
+          {/* Cinema Video Mode Toggle */}
+          {onToggleCinemaMode && (
+            <button
+              onClick={onToggleCinemaMode}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md transition-all active:scale-95 ${
+                isCinemaMode
+                  ? isNightMode
+                    ? 'bg-red-600 text-black shadow-[0_0_12px_#ff0000]'
+                    : 'bg-amber-400 text-black shadow-[0_0_12px_rgba(251,191,36,0.5)]'
+                  : isNightMode
+                  ? 'bg-red-950/50 text-red-400 hover:bg-red-900/60 border border-red-800/40'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
+              }`}
+              title={isCinemaMode ? 'Switch to Album Art' : 'Watch Music Video in Cinema Mode'}
+            >
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z" />
+              </svg>
+              <span>{isCinemaMode ? 'Video ON' : 'Cinema'}</span>
+            </button>
+          )}
 
           {/* Night Mode Toggle */}
           <button
             onClick={onToggleNightMode}
-            className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md transition-all active:scale-95 ${
+            className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md transition-all active:scale-95 ${
               isNightMode
                 ? 'bg-red-600 text-black shadow-[0_0_12px_#ff0000]'
                 : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
             }`}
-            title="Apple StandBy Bedside Night Mode"
+            title="Bedside Night Mode"
           >
             <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
               <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.3 19.98 10.61 20.35 12 20.35c4.97 0 9-4.03 9-9 0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7 0-1.8.69-3.44 1.82-4.69.28-.31.39-.73.29-1.13-.1-.4-.38-.72-.77-.84C4.69 4.84 4 6.34 4 8c0 4.41 3.59 8 8 8 1.66 0 3.16-.69 4.24-1.8.28-.29.41-.69.34-1.09-.07-.4-.33-.74-.71-.89C14.77 11.55 13.43 11 12 11c-1.66 0-3 1.34-3 3 0 .55-.45 1-1 1s-1-.45-1-1c0-2.76 2.24-5 5-5 1.79 0 3.37.95 4.25 2.38C17.63 8.35 15.01 6.5 12 6.5c-3.04 0-5.5 2.46-5.5 5.5 0 3.04 2.46 5.5 5.5 5.5 1.54 0 2.93-.63 3.93-1.65.38-.38 1.01-.39 1.4-.01.4.38.4 1.01.02 1.4C15.89 18.37 14.05 19 12 19z" />
             </svg>
-            <span>{isNightMode ? 'Night Mode' : 'Night Mode'}</span>
+            <span className="hidden sm:inline">Night</span>
           </button>
         </div>
 
-        {/* Exit StandBy */}
-        <button
-          onClick={onExitStandBy}
-          className={`p-1.5 rounded-full backdrop-blur-md transition-all active:scale-95 ${
-            isNightMode
-              ? 'text-red-500 hover:bg-red-950/60'
-              : 'text-white/60 hover:text-white hover:bg-white/10'
-          }`}
-          title="Exit StandBy Mode"
-        >
-          <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-          </svg>
-        </button>
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
+          {/* Fullscreen Mode Button */}
+          {onToggleFullscreen && (
+            <button
+              onClick={onToggleFullscreen}
+              className={`p-1.5 rounded-full backdrop-blur-md transition-all active:scale-95 ${
+                isFullscreen
+                  ? 'text-white bg-white/20'
+                  : isNightMode
+                  ? 'text-red-400 hover:bg-red-950/60'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+              title={isFullscreen ? 'Exit Full Screen' : 'Enter Movie Full Screen'}
+            >
+              {isFullscreen ? (
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-14v3h3v2h-5V5h2z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                </svg>
+              )}
+            </button>
+          )}
+
+          {/* Exit StandBy */}
+          <button
+            onClick={onExitStandBy}
+            className={`p-1.5 rounded-full backdrop-blur-md transition-all active:scale-95 ${
+              isNightMode
+                ? 'text-red-500 hover:bg-red-950/60'
+                : 'text-white/60 hover:text-white hover:bg-white/10'
+            }`}
+            title="Exit StandBy Mode"
+          >
+            <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
