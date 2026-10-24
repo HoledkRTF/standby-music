@@ -106,6 +106,7 @@ export default function StandByMusicPage() {
           lyrics={lyrics}
           isLyricsLoading={isLyricsLoading}
           isNightMode={isNightMode}
+          isLandscape={isLandscape}
           onTogglePlay={togglePlay}
           onNext={nextTrack}
           onPrev={prevTrack}

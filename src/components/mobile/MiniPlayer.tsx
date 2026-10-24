@@ -37,7 +37,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             <img
               src={currentTrack.thumbnail}
               alt={currentTrack.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover bg-white/5"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80';
+              }}
             />
           </div>
           <div className="min-w-0 flex-1 pr-2">

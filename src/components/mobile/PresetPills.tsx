@@ -5,11 +5,11 @@ import { Track } from '../../types/music';
 
 export const CURATED_PRESETS: Track[] = [
   {
-    id: 'jfKfPfyJRdk',
+    id: '5qap5aO4i9A',
     title: 'lofi hip hop radio - beats to relax/study to',
     artist: 'Lofi Girl',
     album: 'Lofi Chill Vibes',
-    thumbnail: 'https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg',
+    thumbnail: 'https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg',
     duration: 0,
   },
   {
@@ -45,11 +45,11 @@ export const CURATED_PRESETS: Track[] = [
     duration: 243,
   },
   {
-    id: 'eVli-tFD3gk',
+    id: 'eVli-tstM5E',
     title: 'Espresso',
     artist: 'Sabrina Carpenter',
     album: 'Short n\' Sweet',
-    thumbnail: 'https://i.ytimg.com/vi/eVli-tFD3gk/hqdefault.jpg',
+    thumbnail: 'https://i.ytimg.com/vi/eVli-tstM5E/hqdefault.jpg',
     duration: 175,
   },
 ];
@@ -81,7 +81,11 @@ export const PresetPills: React.FC<PresetPillsProps> = ({ onSelectTrack, current
               <img
                 src={track.thumbnail}
                 alt={track.title}
-                className="w-9 h-9 rounded-xl object-cover shadow-sm"
+                className="w-9 h-9 rounded-xl object-cover shadow-sm bg-white/5"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80';
+                }}
               />
               <div className="text-left">
                 <p className="text-xs font-semibold text-white truncate max-w-[140px]">{track.title}</p>

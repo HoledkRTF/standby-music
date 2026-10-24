@@ -37,7 +37,11 @@ export const QueueList: React.FC<QueueListProps> = ({ queue, onSelectTrack, onRe
                 <img
                   src={track.thumbnail}
                   alt={track.title}
-                  className="w-10 h-10 rounded-xl object-cover shrink-0"
+                  className="w-10 h-10 rounded-xl object-cover shrink-0 bg-white/5"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80';
+                  }}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-white truncate">{track.title}</p>
