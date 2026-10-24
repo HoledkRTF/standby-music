@@ -46,39 +46,28 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
   }, [activeIndex]);
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between overflow-hidden select-none animate-fadeIn">
-      {/* Sleek Single Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-white/10 shrink-0 z-20">
-        <div className="flex items-center space-x-2">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isNightMode ? 'bg-red-500 animate-pulse' : 'bg-white/80 animate-pulse'
-            }`}
-          />
-          <span
-            className={`text-xs uppercase tracking-widest font-semibold ${
-              isNightMode ? 'text-red-500' : 'text-white/60'
-            }`}
-          >
-            {lyrics.synced ? 'Real-Time Lyrics' : 'Lyrics'}
-          </span>
-        </div>
+    <div className="relative w-full h-full flex flex-col overflow-hidden select-none animate-fadeIn">
+      {/* Minimal Top Close Control - Floating seamlessly without clunky title or border line */}
+      <div className="flex items-center justify-end shrink-0 z-20 pb-1 pr-1">
         <button
           onClick={onClose}
-          className={`text-xs font-semibold px-3.5 py-1 rounded-full transition-all active:scale-95 shadow-sm ${
+          className={`p-1.5 rounded-full backdrop-blur-xl transition-all active:scale-90 ${
             isNightMode
-              ? 'bg-red-600 hover:bg-red-500 text-black'
-              : 'bg-white hover:bg-white/90 text-black'
+              ? 'bg-red-950/60 text-red-400 hover:bg-red-900/80 border border-red-500/20'
+              : 'bg-white/10 hover:bg-white/20 text-white/70 hover:text-white border border-white/10'
           }`}
+          title="Close Lyrics"
         >
-          Done
+          <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
       {/* Lyrics Scrollable Body - 100% clean typography without any mask or overlay artifacts */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-28 space-y-6 scrollbar-none relative"
+        className="flex-1 overflow-y-auto overflow-x-hidden pt-4 pb-24 space-y-6 scrollbar-none relative"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',

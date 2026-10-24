@@ -203,12 +203,8 @@ export async function GET(request: Request) {
         }
       }
 
-      // Thumbnail
-      const sources = item?.contentImage?.thumbnailViewModel?.image?.sources || [];
-      const thumbnail =
-        sources.length > 0
-          ? sources[sources.length - 1].url
-          : `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+      // Crisp HD Thumbnail
+      const thumbnail = `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`;
 
       tracks.push({
         id: vid,
@@ -231,9 +227,7 @@ export async function GET(request: Request) {
         const trackTitle = pvr?.title?.runs?.[0]?.text || 'Unknown Track';
         const artist = pvr?.shortBylineText?.runs?.[0]?.text || 'YouTube Music';
         const duration = parseInt(pvr?.lengthSeconds || '210', 10);
-        const thumbs = pvr?.thumbnail?.thumbnails || [];
-        const thumbnail =
-          thumbs.length > 0 ? thumbs[thumbs.length - 1].url : `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+        const thumbnail = `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`;
 
         tracks.push({
           id: vid,

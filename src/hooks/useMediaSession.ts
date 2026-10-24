@@ -46,15 +46,27 @@ export function useMediaSession({
 
     const audio = silentAudioRef.current;
 
-    if (isPlaying) {
-      audio.play().catch(() => {
-        // User gesture may be required on initial page load
-      });
-    } else {
-      audio.pause();
-    }
+    // Only run silent keep-alive when the app is in the background or screen is locked.
+    // Running HTML audio in the foreground causes iOS to display an intrusive Dynamic Island
+    // Now Playing pill with duplicate artwork over the screen.
+    const updateAudioState = () => {
+      if (isPlaying && document.hidden) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+    };
+
+    updateAudioState();
+
+    const handleVisibilityChange = () => {
+      updateAudioState();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       audio.pause();
     };
   }, [isPlaying]);

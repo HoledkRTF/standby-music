@@ -302,7 +302,7 @@ export const StandByView: React.FC<StandByViewProps> = ({
           : 'bg-[#5c5d5d]/75 dark:bg-[#2c2d2e]/80 backdrop-blur-3xl'
       } ${
         isLandscape
-          ? 'flex flex-row items-center justify-between pl-[max(4.25rem,env(safe-area-inset-left,68px))] pr-[max(4.25rem,env(safe-area-inset-right,68px))] py-[max(1.5rem,env(safe-area-inset-top,24px))] pb-[max(1.5rem,env(safe-area-inset-bottom,24px))]'
+          ? 'flex flex-row items-center justify-between pl-[max(5rem,env(safe-area-inset-left,76px))] pr-[max(4.5rem,env(safe-area-inset-right,68px))] py-[max(1.5rem,env(safe-area-inset-top,24px))] pb-[max(1.5rem,env(safe-area-inset-bottom,24px))]'
           : 'flex flex-col items-center justify-between p-6 pt-[max(2.5rem,env(safe-area-inset-top,40px))] pb-[max(2.5rem,env(safe-area-inset-bottom,40px))]'
       }`}
     >

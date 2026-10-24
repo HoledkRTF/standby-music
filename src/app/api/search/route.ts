@@ -59,9 +59,7 @@ export async function GET(request: Request) {
           if (parts.length === 2) duration = parts[0] * 60 + parts[1];
           else if (parts.length === 3) duration = parts[0] * 3600 + parts[1] * 60 + parts[2];
 
-          const thumbnail =
-            vr.thumbnail?.thumbnails?.[vr.thumbnail.thumbnails.length - 1]?.url ||
-            `https://i.ytimg.com/vi/${vr.videoId}/hqdefault.jpg`;
+          const thumbnail = `https://i.ytimg.com/vi/${vr.videoId}/maxresdefault.jpg`;
 
           tracks.push({
             id: vr.videoId,
