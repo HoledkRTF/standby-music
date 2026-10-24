@@ -75,22 +75,10 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
         </button>
       </div>
 
-      {/* Smooth gradient fades without CSS mask glitching */}
-      <div
-        className={`pointer-events-none absolute top-10 left-0 right-0 h-10 z-10 transition-colors ${
-          isNightMode ? 'bg-gradient-to-b from-red-950/90 to-transparent' : 'bg-gradient-to-b from-[#2c2d2e] to-transparent'
-        }`}
-      />
-      <div
-        className={`pointer-events-none absolute bottom-0 left-0 right-0 h-12 z-10 transition-colors ${
-          isNightMode ? 'bg-gradient-to-t from-red-950/90 to-transparent' : 'bg-gradient-to-t from-[#2c2d2e] to-transparent'
-        }`}
-      />
-
-      {/* Lyrics Scrollable Body */}
+      {/* Lyrics Scrollable Body - 100% clean typography without any mask or overlay artifacts */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden py-8 space-y-6 scrollbar-none relative"
+        className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-28 space-y-6 scrollbar-none relative"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -122,14 +110,14 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
                 onClick={() => {
                   if (lyrics.synced) onSeek(line.time);
                 }}
-                className={`text-xl sm:text-2xl md:text-3xl font-bold leading-relaxed transition-all duration-300 cursor-pointer ${
+                className={`text-xl sm:text-2xl md:text-3xl leading-snug transition-all duration-300 cursor-pointer ${
                   isActive
                     ? isNightMode
-                      ? 'text-red-500 [text-shadow:_0_0_25px_rgba(239,68,68,0.6)]'
-                      : 'text-white [text-shadow:_0_0_25px_rgba(255,255,255,0.6)]'
+                      ? 'text-red-500 font-black'
+                      : 'text-white font-black'
                     : isNightMode
-                    ? 'text-red-950/70 hover:text-red-800'
-                    : 'text-white/30 hover:text-white/60'
+                    ? 'text-red-950/70 font-semibold hover:text-red-800'
+                    : 'text-white/30 font-semibold hover:text-white/60'
                 }`}
               >
                 {line.text}
