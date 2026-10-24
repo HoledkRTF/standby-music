@@ -9,15 +9,16 @@ import { useLyrics } from '@/hooks/useLyrics';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { AmbientBackground } from '@/components/ambient/AmbientBackground';
 import { HiddenPlayer } from '@/components/standby/HiddenPlayer';
-import { PortraitView } from '@/components/mobile/PortraitView';
+import { YouTubeMusicView } from '@/components/ytmusic/YouTubeMusicView';
 import { StandByView } from '@/components/standby/StandByView';
 import { InstallModal } from '@/components/mobile/InstallModal';
-import { CURATED_PRESETS } from '@/components/mobile/PresetPills';
+import { CURATED_TRACKS } from '@/data/musicData';
 
 export default function StandByMusicPage() {
   const {
     state: playerState,
     playTrack,
+    playPlaylist,
     addToQueue,
     removeFromQueue,
     togglePlay,
@@ -30,7 +31,7 @@ export default function StandByMusicPage() {
     onPlayerReady,
     onPlayerStateChange,
     onPlayerError,
-  } = useYouTubePlayer(CURATED_PRESETS);
+  } = useYouTubePlayer(CURATED_TRACKS);
 
   const { isLandscape } = useOrientation();
   const [manualStandBy, setManualStandBy] = useState<boolean>(false);
@@ -132,13 +133,15 @@ export default function StandByMusicPage() {
           onExitStandBy={handleExitStandBy}
         />
       ) : (
-        <PortraitView
+        <YouTubeMusicView
           playerState={playerState}
           isFullscreen={isFullscreen}
           onSelectTrack={playTrack}
+          onPlayPlaylist={playPlaylist}
           onAddToQueue={addToQueue}
           onRemoveFromQueue={removeFromQueue}
           onTogglePlay={togglePlay}
+          onNextTrack={nextTrack}
           onEnterStandBy={handleEnterStandBy}
           onEnterCinemaMode={handleEnterCinemaMode}
           onToggleFullscreen={toggleFullscreen}

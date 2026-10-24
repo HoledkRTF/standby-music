@@ -128,6 +128,31 @@ export function useYouTubePlayer(initialTracks: Track[] = []) {
     }
   }, []);
 
+  const playPlaylist = useCallback((tracks: Track[], startIndex: number = 0) => {
+    if (!tracks || tracks.length === 0) return;
+    const clampedIndex = Math.max(0, Math.min(startIndex, tracks.length - 1));
+    const targetTrack = tracks[clampedIndex];
+    const newQueue = tracks.slice(clampedIndex + 1);
+
+    setState((prev) => {
+      const newHistory = prev.currentTrack ? [prev.currentTrack, ...prev.history] : prev.history;
+      return {
+        ...prev,
+        currentTrack: targetTrack,
+        queue: newQueue,
+        history: newHistory,
+        currentTime: 0,
+        duration: targetTrack.duration || 0,
+        status: 'playing',
+      };
+    });
+
+    if (playerRef.current && playerRef.current.loadVideoById) {
+      playerRef.current.loadVideoById(targetTrack.id);
+      playerRef.current.playVideo();
+    }
+  }, []);
+
   const addToQueue = useCallback((track: Track) => {
     setState((prev) => ({
       ...prev,
@@ -234,6 +259,7 @@ export function useYouTubePlayer(initialTracks: Track[] = []) {
   return {
     state,
     playTrack,
+    playPlaylist,
     addToQueue,
     removeFromQueue,
     togglePlay,

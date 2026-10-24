@@ -7,6 +7,17 @@ export interface Track {
   duration: number; // in seconds
 }
 
+export interface Playlist {
+  id: string;
+  title: string;
+  description: string;
+  creator: string;
+  coverUrl: string;
+  tracks: Track[];
+  category?: 'hits' | 'relax' | 'workout' | 'focus' | 'commute' | 'party' | 'all';
+  isUserCreated?: boolean;
+}
+
 export interface LyricsLine {
   time: number; // in seconds
   text: string;

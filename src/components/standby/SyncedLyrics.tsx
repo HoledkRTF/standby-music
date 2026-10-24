@@ -48,7 +48,7 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
   return (
     <div className="relative w-full h-full flex flex-col justify-between overflow-hidden select-none animate-fadeIn">
       {/* Sleek Single Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-white/10 shrink-0">
+      <div className="flex items-center justify-between pb-2.5 border-b border-white/10 shrink-0 z-20">
         <div className="flex items-center space-x-2">
           <span
             className={`w-2 h-2 rounded-full ${
@@ -75,15 +75,25 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
         </button>
       </div>
 
-      {/* Lyrics Scrollable Body with Top/Bottom Gradient Mask */}
+      {/* Smooth gradient fades without CSS mask glitching */}
+      <div
+        className={`pointer-events-none absolute top-10 left-0 right-0 h-10 z-10 transition-colors ${
+          isNightMode ? 'bg-gradient-to-b from-red-950/90 to-transparent' : 'bg-gradient-to-b from-[#2c2d2e] to-transparent'
+        }`}
+      />
+      <div
+        className={`pointer-events-none absolute bottom-0 left-0 right-0 h-12 z-10 transition-colors ${
+          isNightMode ? 'bg-gradient-to-t from-red-950/90 to-transparent' : 'bg-gradient-to-t from-[#2c2d2e] to-transparent'
+        }`}
+      />
+
+      {/* Lyrics Scrollable Body */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden py-8 space-y-5 scrollbar-none"
+        className="flex-1 overflow-y-auto overflow-x-hidden py-8 space-y-6 scrollbar-none relative"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
-          maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
         }}
       >
         {isLoading ? (
@@ -115,11 +125,11 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
                 className={`text-xl sm:text-2xl md:text-3xl font-bold leading-relaxed transition-all duration-300 cursor-pointer ${
                   isActive
                     ? isNightMode
-                      ? 'text-red-500 scale-[1.02] origin-left drop-shadow-[0_0_15px_rgba(255,20,0,0.6)]'
-                      : 'text-white scale-[1.02] origin-left drop-shadow-[0_0_20px_rgba(255,255,255,0.7)]'
+                      ? 'text-red-500 [text-shadow:_0_0_25px_rgba(239,68,68,0.6)]'
+                      : 'text-white [text-shadow:_0_0_25px_rgba(255,255,255,0.6)]'
                     : isNightMode
                     ? 'text-red-950/70 hover:text-red-800'
-                    : 'text-white/35 hover:text-white/60'
+                    : 'text-white/30 hover:text-white/60'
                 }`}
               >
                 {line.text}
