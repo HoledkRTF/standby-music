@@ -26,6 +26,7 @@ export default function StandByMusicPage() {
     prevTrack,
     toggleShuffle,
     toggleRepeat,
+    toggleMute,
     onPlayerReady,
     onPlayerStateChange,
     onPlayerError,
@@ -127,6 +128,7 @@ export default function StandByMusicPage() {
           onToggleNightMode={() => setIsNightMode((prev) => !prev)}
           onToggleCinemaMode={() => setIsCinemaMode((prev) => !prev)}
           onToggleFullscreen={toggleFullscreen}
+          onToggleMute={toggleMute}
           onExitStandBy={handleExitStandBy}
         />
       ) : (
