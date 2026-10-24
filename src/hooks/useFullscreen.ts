@@ -43,6 +43,12 @@ export function useFullscreen() {
   const toggleFullscreen = useCallback(async () => {
     if (typeof document === 'undefined') return;
 
+    // If on iOS and not yet running as standalone PWA, guide user to Add to Home Screen for 100% borderless fullscreen
+    if (isIOS && !isStandalone) {
+      setShowInstallPrompt(true);
+      return;
+    }
+
     const docEl = document.documentElement as any;
     const isDocFs = !!(
       document.fullscreenElement ||
@@ -66,17 +72,16 @@ export function useFullscreen() {
         await docEl.requestFullscreen();
         return;
       } catch (e) {
-        // Fallback for iOS / restricted environments
+        setShowInstallPrompt(true);
       }
     } else if (docEl.webkitRequestFullscreen) {
       try {
         docEl.webkitRequestFullscreen();
         return;
-      } catch (e) {}
-    }
-
-    // If on iOS and not standalone, show PWA home screen instructions
-    if (isIOS && !isStandalone) {
+      } catch (e) {
+        setShowInstallPrompt(true);
+      }
+    } else {
       setShowInstallPrompt(true);
     }
   }, [isIOS, isStandalone]);
