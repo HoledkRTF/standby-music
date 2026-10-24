@@ -40,6 +40,32 @@ export function useYouTubePlayer(initialTracks: Track[] = []) {
     }
   }, []);
 
+  // On mount, load user's real YouTube Music quick picks if available
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const saved = localStorage.getItem('standby_user_quick_picks');
+      if (saved) {
+        const parsed: Track[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setState((prev) => {
+            if (prev.status === 'unstarted') {
+              return {
+                ...prev,
+                currentTrack: parsed[0],
+                queue: parsed.slice(1),
+                duration: parsed[0].duration || 0,
+              };
+            }
+            return prev;
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const onPlayerReady = useCallback((event: any) => {
     playerRef.current = event.target;
     playerRef.current.setVolume(state.volume);

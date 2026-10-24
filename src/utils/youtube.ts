@@ -9,11 +9,20 @@ export function extractYouTubeId(urlOrId: string): string | null {
   return match ? match[1] : null;
 }
 
+export function extractPlaylistId(urlOrId: string): string | null {
+  if (!urlOrId) return null;
+  const trimmed = urlOrId.trim();
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(trimmed) && !trimmed.includes('/') && !trimmed.includes('.')) {
+    return trimmed;
+  }
+  const match = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
+  return match ? match[1] : null;
+}
+
 export function parseYouTubeUrl(url: string): { videoId: string | null; playlistId: string | null } {
   if (!url) return { videoId: null, playlistId: null };
   const videoId = extractYouTubeId(url);
-  const playlistMatch = url.match(/[?&]list=([^#&?]+)/);
-  const playlistId = playlistMatch ? playlistMatch[1] : null;
+  const playlistId = extractPlaylistId(url);
   return { videoId, playlistId };
 }
 

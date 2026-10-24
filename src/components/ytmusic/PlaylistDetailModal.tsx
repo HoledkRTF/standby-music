@@ -13,6 +13,7 @@ interface PlaylistDetailModalProps {
   onPlayPlaylist: (tracks: Track[], startIndex?: number) => void;
   onPlayTrack: (track: Track) => void;
   onAddToQueue: (track: Track) => void;
+  onSetAsQuickPicks?: (tracks: Track[], playlistTitle: string) => void;
 }
 
 export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
@@ -22,7 +23,9 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
   onClose,
   onPlayPlaylist,
   onAddToQueue,
+  onSetAsQuickPicks,
 }) => {
+  const [pinnedNotice, setPinnedNotice] = React.useState<string | null>(null);
   const totalDuration = playlist.tracks.reduce((acc, t) => acc + (t.duration || 180), 0);
   const totalMinutes = Math.round(totalDuration / 60);
 
@@ -107,6 +110,20 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
               <span>Shuffle</span>
             </button>
           </div>
+
+          {/* Pin as Home Quick Picks */}
+          {onSetAsQuickPicks && playlist.tracks.length > 0 && (
+            <button
+              onClick={() => {
+                onSetAsQuickPicks(playlist.tracks, playlist.title);
+                setPinnedNotice('Pinned to Home Quick picks!');
+                setTimeout(() => setPinnedNotice(null), 2500);
+              }}
+              className="mt-2 text-xs font-semibold text-white/60 hover:text-white px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all flex items-center space-x-1.5"
+            >
+              <span>{pinnedNotice ? '✓ ' + pinnedNotice : '★ Pin to Home Quick picks'}</span>
+            </button>
+          )}
         </div>
 
         {/* Tracks List */}

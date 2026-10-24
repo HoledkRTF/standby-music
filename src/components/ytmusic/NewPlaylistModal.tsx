@@ -55,39 +55,62 @@ export const NewPlaylistModal: React.FC<NewPlaylistModalProps> = ({
     setIsImporting(true);
     setErrorMsg(null);
 
-    const videoId = extractYouTubeId(importUrl.trim());
-    if (videoId) {
-      try {
-        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
-        const data = await res.json();
-        const importedTrack: Track = {
-          id: videoId,
-          title: data.title || 'Imported YouTube Song',
-          artist: data.author_name || 'YouTube',
-          thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-          duration: 210,
-        };
+    try {
+      const res = await fetch(`/api/playlist?url=${encodeURIComponent(importUrl.trim())}`);
+      const data = await res.json();
 
-        const newPlaylist: Playlist = {
-          id: `pl-user-${Date.now()}`,
-          title: data.title ? `Mix: ${data.title.slice(0, 24)}...` : 'Imported YouTube Mix',
-          description: `Imported from YouTube link: ${data.author_name || 'YouTube'}`,
-          creator: 'You',
-          coverUrl: importedTrack.thumbnail,
-          tracks: [importedTrack],
-          category: 'all',
-          isUserCreated: true,
-        };
-
-        onCreatePlaylist(newPlaylist);
-        onClose();
-      } catch {
-        setErrorMsg('Could not fetch YouTube info. Please check the URL.');
-      } finally {
-        setIsImporting(false);
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to import playlist');
       }
-    } else {
-      setErrorMsg('Please enter a valid YouTube video or song link.');
+
+      if (data.playlist) {
+        onCreatePlaylist(data.playlist);
+        // Also save to user quick picks if available
+        if (data.playlist.tracks && data.playlist.tracks.length > 0 && typeof window !== 'undefined') {
+          localStorage.setItem('standby_user_quick_picks', JSON.stringify(data.playlist.tracks));
+          localStorage.setItem('standby_synced_playlist_name', data.playlist.title);
+        }
+        onClose();
+        return;
+      }
+      throw new Error('No playlist data received');
+    } catch (err: any) {
+      console.warn('Playlist import error:', err);
+      // Fallback: try single video
+      const videoId = extractYouTubeId(importUrl.trim());
+      if (videoId) {
+        try {
+          const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+          const data = await res.json();
+          const importedTrack: Track = {
+            id: videoId,
+            title: data.title || 'Imported YouTube Song',
+            artist: data.author_name || 'YouTube',
+            thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+            duration: 210,
+          };
+
+          const newPlaylist: Playlist = {
+            id: `pl-user-${Date.now()}`,
+            title: data.title ? `Mix: ${data.title.slice(0, 24)}...` : 'Imported YouTube Mix',
+            description: `Imported from YouTube link: ${data.author_name || 'YouTube'}`,
+            creator: 'You',
+            coverUrl: importedTrack.thumbnail,
+            tracks: [importedTrack],
+            category: 'all',
+            isUserCreated: true,
+          };
+
+          onCreatePlaylist(newPlaylist);
+          onClose();
+          return;
+        } catch {
+          setErrorMsg('Could not fetch YouTube info. Please check the URL.');
+        }
+      } else {
+        setErrorMsg(err.message || 'Please enter a valid YouTube or YouTube Music playlist link.');
+      }
+    } finally {
       setIsImporting(false);
     }
   };
@@ -167,15 +190,15 @@ export const NewPlaylistModal: React.FC<NewPlaylistModalProps> = ({
         {/* Import YouTube link */}
         <div className="border-t border-white/10 pt-4 space-y-3">
           <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-            Or Quick Import from YouTube
+            Or Import YouTube Music Playlist
           </p>
           <div className="flex items-center space-x-2">
             <input
               type="text"
               value={importUrl}
               onChange={(e) => setImportUrl(e.target.value)}
-              placeholder="Paste YouTube song link..."
-              className="flex-1 px-3 py-2 bg-white/5 text-white placeholder-white/30 rounded-xl text-xs outline-none border border-white/10"
+              placeholder="Paste YouTube Music playlist or song link..."
+              className="flex-1 px-3 py-2 bg-white/5 text-white placeholder-white/30 rounded-xl text-xs outline-none border border-white/10 focus:border-red-500 transition-colors"
             />
             <button
               onClick={handleImport}
