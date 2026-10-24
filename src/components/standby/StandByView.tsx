@@ -327,29 +327,14 @@ export const StandByView: React.FC<StandByViewProps> = ({
         } flex flex-col justify-between`}
       >
         {isLyricsOpen ? (
-          <div className="w-full h-full flex flex-col justify-between">
-            <div className="flex justify-between items-center pb-2 border-b border-white/10">
-              <span className="text-xs uppercase tracking-wider font-semibold text-white/50">Lyrics</span>
-              <button
-                onClick={() => setIsLyricsOpen(false)}
-                className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                  isNightMode ? 'bg-red-600 text-black' : 'bg-white text-black'
-                }`}
-              >
-                Done
-              </button>
-            </div>
-            <div className="flex-1 my-2 overflow-hidden rounded-2xl bg-black/25">
-              <SyncedLyrics
-                lyrics={lyrics}
-                currentTime={playerState.currentTime}
-                isLoading={isLyricsLoading}
-                onSeek={onSeek}
-                onClose={() => setIsLyricsOpen(false)}
-                isNightMode={isNightMode}
-              />
-            </div>
-          </div>
+          <SyncedLyrics
+            lyrics={lyrics}
+            currentTime={playerState.currentTime}
+            isLoading={isLyricsLoading}
+            onSeek={onSeek}
+            onClose={() => setIsLyricsOpen(false)}
+            isNightMode={isNightMode}
+          />
         ) : (
           <>
             {/* Top Row: Volume, AirPlay/Fullscreen, Lyrics, Cinema, Night, Close */}

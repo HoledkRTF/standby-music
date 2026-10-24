@@ -46,9 +46,9 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
   }, [activeIndex]);
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between p-4 md:p-6 overflow-hidden select-none animate-fadeIn">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+    <div className="relative w-full h-full flex flex-col justify-between overflow-hidden select-none animate-fadeIn">
+      {/* Sleek Single Header */}
+      <div className="flex items-center justify-between pb-2.5 border-b border-white/10 shrink-0">
         <div className="flex items-center space-x-2">
           <span
             className={`w-2 h-2 rounded-full ${
@@ -57,7 +57,7 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
           />
           <span
             className={`text-xs uppercase tracking-widest font-semibold ${
-              isNightMode ? 'text-red-500' : 'text-white/70'
+              isNightMode ? 'text-red-500' : 'text-white/60'
             }`}
           >
             {lyrics.synced ? 'Real-Time Lyrics' : 'Lyrics'}
@@ -65,25 +65,34 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
         </div>
         <button
           onClick={onClose}
-          className={`text-xs px-3 py-1.5 rounded-full transition-all active:scale-95 ${
+          className={`text-xs font-semibold px-3.5 py-1 rounded-full transition-all active:scale-95 shadow-sm ${
             isNightMode
-              ? 'bg-red-950/60 hover:bg-red-900/80 text-red-400 border border-red-800/40'
-              : 'bg-white/15 hover:bg-white/25 text-white/90 backdrop-blur-md'
+              ? 'bg-red-600 hover:bg-red-500 text-black'
+              : 'bg-white hover:bg-white/90 text-black'
           }`}
         >
           Done
         </button>
       </div>
 
-      {/* Lyrics Scrollable Body */}
+      {/* Lyrics Scrollable Body with Top/Bottom Gradient Mask */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden py-10 space-y-6 scrollbar-none"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex-1 overflow-y-auto overflow-x-hidden py-8 space-y-5 scrollbar-none"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+        }}
       >
         {isLoading ? (
           <div className="h-full flex flex-col items-center justify-center space-y-3 text-white/50 text-sm">
-            <div className={`w-6 h-6 border-2 rounded-full animate-spin ${isNightMode ? 'border-red-500 border-t-transparent' : 'border-white/60 border-t-transparent'}`} />
+            <div
+              className={`w-6 h-6 border-2 rounded-full animate-spin ${
+                isNightMode ? 'border-red-500 border-t-transparent' : 'border-white/60 border-t-transparent'
+              }`}
+            />
             <span>Finding lyrics...</span>
           </div>
         ) : lyrics.lines.length === 0 ? (
@@ -103,14 +112,14 @@ export const SyncedLyrics: React.FC<SyncedLyricsProps> = ({
                 onClick={() => {
                   if (lyrics.synced) onSeek(line.time);
                 }}
-                className={`text-xl md:text-3xl font-bold leading-relaxed transition-all duration-300 cursor-pointer ${
+                className={`text-xl sm:text-2xl md:text-3xl font-bold leading-relaxed transition-all duration-300 cursor-pointer ${
                   isActive
                     ? isNightMode
-                      ? 'text-red-500 scale-[1.03] origin-left drop-shadow-[0_0_15px_rgba(255,20,0,0.6)]'
-                      : 'text-white scale-[1.03] origin-left drop-shadow-[0_0_20px_rgba(255,255,255,0.7)]'
+                      ? 'text-red-500 scale-[1.02] origin-left drop-shadow-[0_0_15px_rgba(255,20,0,0.6)]'
+                      : 'text-white scale-[1.02] origin-left drop-shadow-[0_0_20px_rgba(255,255,255,0.7)]'
                     : isNightMode
                     ? 'text-red-950/70 hover:text-red-800'
-                    : 'text-white/35 hover:text-white/60 blur-[0.2px]'
+                    : 'text-white/35 hover:text-white/60'
                 }`}
               >
                 {line.text}
