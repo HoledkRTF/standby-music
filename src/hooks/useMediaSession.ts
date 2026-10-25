@@ -24,9 +24,28 @@ export function useMediaSession({
   onPrev,
   onSeek,
 }: UseMediaSessionProps) {
-  // Configure Media Session API metadata & action handlers
   useEffect(() => {
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return;
+
+    // Detect iOS devices (iPhone, iPad, iPod)
+    const userAgent = window.navigator.userAgent || '';
+    const isIOS =
+      /iPhone|iPad|iPod/.test(userAgent) ||
+      (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+
+    // On iOS Safari, registering MediaSession metadata (artwork, title) with an active YouTube iframe
+    // causes iOS to render an intrusive duplicate album art pill inside the Dynamic Island on screen,
+    // while providing ZERO background playback (iOS WebKit forcefully freezes YouTube iframes on screen lock).
+    // Disabling mediaSession on iOS keeps the Dynamic Island completely dark and clean in StandBy mode.
+    if (isIOS) {
+      try {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = 'none';
+      } catch {
+        // ignore
+      }
+      return;
+    }
 
     if (currentTrack) {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -60,7 +79,7 @@ export function useMediaSession({
 
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 
-    // Set lock screen & headphone action handlers where supported
+    // Set desktop media key action handlers (play/pause, next, prev, seek)
     try {
       navigator.mediaSession.setActionHandler('play', () => {
         onTogglePlay();
@@ -98,7 +117,7 @@ export function useMediaSession({
     }
   }, [currentTrack, isPlaying, onTogglePlay, onNext, onPrev, onSeek, currentTime, duration]);
 
-  // Sync position state with system scrubber
+  // Sync position state on supported desktop platforms
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
@@ -108,6 +127,12 @@ export function useMediaSession({
       return;
     }
 
+    const isIOS =
+      /iPhone|iPad|iPod/.test(window.navigator.userAgent || '') ||
+      (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+
+    if (isIOS) return;
+
     if (duration > 0 && currentTime <= duration) {
       try {
         navigator.mediaSession.setPositionState({
@@ -116,7 +141,7 @@ export function useMediaSession({
           position: Math.min(currentTime, duration),
         });
       } catch {
-        // ignore out of range warnings during track transitions
+        // ignore
       }
     }
   }, [currentTime, duration, isPlaying]);

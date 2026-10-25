@@ -12,7 +12,6 @@ import { AmbientBackground } from '@/components/ambient/AmbientBackground';
 import { HiddenPlayer } from '@/components/standby/HiddenPlayer';
 import { YouTubeMusicView } from '@/components/ytmusic/YouTubeMusicView';
 import { StandByView } from '@/components/standby/StandByView';
-import { InstallModal } from '@/components/mobile/InstallModal';
 import { CURATED_TRACKS } from '@/data/musicData';
 
 export default function StandByMusicPage() {
@@ -39,12 +38,9 @@ export default function StandByMusicPage() {
   const [isNightMode, setIsNightMode] = useState<boolean>(false);
   const [isCinemaMode, setIsCinemaMode] = useState<boolean>(false);
 
-  // Fullscreen and PWA hooks
+  // Fullscreen hook for platforms that support it
   const {
     isFullscreen,
-    isIOS,
-    showInstallPrompt,
-    setShowInstallPrompt,
     toggleFullscreen,
   } = useFullscreen();
 
@@ -76,15 +72,13 @@ export default function StandByMusicPage() {
     onSeek: seekTo,
   });
 
-  const handleEnterStandBy = async () => {
+  const handleEnterStandBy = () => {
     setManualStandBy(true);
-    await toggleFullscreen();
   };
 
-  const handleEnterCinemaMode = async () => {
+  const handleEnterCinemaMode = () => {
     setIsCinemaMode(true);
     setManualStandBy(true);
-    await toggleFullscreen();
   };
 
   const handleExitStandBy = async () => {
@@ -160,13 +154,6 @@ export default function StandByMusicPage() {
           onToggleFullscreen={toggleFullscreen}
         />
       )}
-
-      {/* iOS / Mobile PWA Fullscreen Install Guide */}
-      <InstallModal
-        isOpen={showInstallPrompt}
-        onClose={() => setShowInstallPrompt(false)}
-        isIOS={isIOS}
-      />
     </main>
   );
 }

@@ -6,7 +6,6 @@ export function useFullscreen() {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isIOS, setIsIOS] = useState<boolean>(false);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
-  const [showInstallPrompt, setShowInstallPrompt] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -43,12 +42,6 @@ export function useFullscreen() {
   const toggleFullscreen = useCallback(async () => {
     if (typeof document === 'undefined') return;
 
-    // If on iOS and not yet running as standalone PWA, guide user to Add to Home Screen for 100% borderless fullscreen
-    if (isIOS && !isStandalone) {
-      setShowInstallPrompt(true);
-      return;
-    }
-
     const docEl = document.documentElement as any;
     const isDocFs = !!(
       document.fullscreenElement ||
@@ -66,32 +59,22 @@ export function useFullscreen() {
       return;
     }
 
-    // Try standard Fullscreen API
-    if (docEl.requestFullscreen) {
-      try {
+    // Try standard Fullscreen API silently if supported
+    try {
+      if (docEl.requestFullscreen) {
         await docEl.requestFullscreen();
-        return;
-      } catch (e) {
-        setShowInstallPrompt(true);
-      }
-    } else if (docEl.webkitRequestFullscreen) {
-      try {
+      } else if (docEl.webkitRequestFullscreen) {
         docEl.webkitRequestFullscreen();
-        return;
-      } catch (e) {
-        setShowInstallPrompt(true);
       }
-    } else {
-      setShowInstallPrompt(true);
+    } catch {
+      // Gracefully ignore rejections on platforms without Fullscreen API support (like iOS Safari)
     }
-  }, [isIOS, isStandalone]);
+  }, []);
 
   return {
     isFullscreen,
     isIOS,
     isStandalone,
-    showInstallPrompt,
-    setShowInstallPrompt,
     toggleFullscreen,
   };
 }
