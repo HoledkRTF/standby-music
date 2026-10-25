@@ -7,7 +7,6 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useDominantColor } from '@/hooks/useDominantColor';
 import { useLyrics } from '@/hooks/useLyrics';
 import { useFullscreen } from '@/hooks/useFullscreen';
-import { useMediaSession } from '@/hooks/useMediaSession';
 import { AmbientBackground } from '@/components/ambient/AmbientBackground';
 import { HiddenPlayer } from '@/components/standby/HiddenPlayer';
 import { YouTubeMusicView } from '@/components/ytmusic/YouTubeMusicView';
@@ -60,18 +59,6 @@ export default function StandByMusicPage() {
     playerState.currentTrack?.artist
   );
 
-  // Background playback & iOS Lock Screen / AirPods Media Session
-  useMediaSession({
-    currentTrack: playerState.currentTrack,
-    isPlaying,
-    currentTime: playerState.currentTime,
-    duration: playerState.duration,
-    onTogglePlay: togglePlay,
-    onNext: nextTrack,
-    onPrev: prevTrack,
-    onSeek: seekTo,
-  });
-
   const handleEnterStandBy = () => {
     setManualStandBy(true);
   };
@@ -115,6 +102,7 @@ export default function StandByMusicPage() {
         onReady={onPlayerReady}
         onStateChange={onPlayerStateChange}
         onError={onPlayerError}
+        onScreenTap={handleEnterCinemaMode}
       />
 
       {/* Viewport View: Portrait Library vs Landscape StandBy / Movie Cinema */}

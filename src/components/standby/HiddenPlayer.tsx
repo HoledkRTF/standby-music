@@ -17,7 +17,6 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
   onReady,
   onStateChange,
   onError,
-  onScreenTap,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerInstanceRef = useRef<any>(null);
@@ -32,7 +31,7 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
             videoId: videoId || '',
             playerVars: {
               autoplay: 1,
-              controls: 0,
+              controls: isCinemaMode ? 1 : 0,
               disablekb: 1,
               fs: 1,
               modestbranding: 1,
@@ -89,15 +88,6 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
           id="youtube-standby-player-element"
           className="w-full h-full max-w-full max-h-full object-contain"
         />
-
-        {/* Transparent touch/click overlay to capture screen taps in cinema mode without iframe intercepting */}
-        {isCinemaMode && (
-          <div
-            onClick={onScreenTap}
-            className="absolute inset-0 z-20 cursor-pointer bg-transparent"
-            title="Tap to toggle movie controls"
-          />
-        )}
       </div>
     </div>
   );
