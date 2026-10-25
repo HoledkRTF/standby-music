@@ -1,11 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Track } from '../types/music';
-
-// Ultra-short 1-second silent stereo WAV data URI (uncompressed 44.1kHz 16-bit silence)
-const SILENT_WAV_BASE64 =
-  'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP8A/wD/';
 
 interface UseMediaSessionProps {
   currentTrack: Track | null;
@@ -28,49 +24,6 @@ export function useMediaSession({
   onPrev,
   onSeek,
 }: UseMediaSessionProps) {
-  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Initialize and manage the silent keep-alive audio element for iOS Safari background playback
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!silentAudioRef.current) {
-      const audio = new Audio(SILENT_WAV_BASE64);
-      audio.loop = true;
-      audio.preload = 'auto';
-      // iOS WebKit playsInline flag
-      audio.setAttribute('playsinline', 'true');
-      audio.setAttribute('webkit-playsinline', 'true');
-      silentAudioRef.current = audio;
-    }
-
-    const audio = silentAudioRef.current;
-
-    // Only run silent keep-alive when the app is in the background or screen is locked.
-    // Running HTML audio in the foreground causes iOS to display an intrusive Dynamic Island
-    // Now Playing pill with duplicate artwork over the screen.
-    const updateAudioState = () => {
-      if (isPlaying && document.hidden) {
-        audio.play().catch(() => {});
-      } else {
-        audio.pause();
-      }
-    };
-
-    updateAudioState();
-
-    const handleVisibilityChange = () => {
-      updateAudioState();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      audio.pause();
-    };
-  }, [isPlaying]);
-
   // Configure Media Session API metadata & action handlers
   useEffect(() => {
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return;
@@ -107,7 +60,7 @@ export function useMediaSession({
 
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 
-    // Set lock screen & headphone action handlers
+    // Set lock screen & headphone action handlers where supported
     try {
       navigator.mediaSession.setActionHandler('play', () => {
         onTogglePlay();
@@ -145,7 +98,7 @@ export function useMediaSession({
     }
   }, [currentTrack, isPlaying, onTogglePlay, onNext, onPrev, onSeek, currentTime, duration]);
 
-  // Sync position state with iOS lock screen scrubber
+  // Sync position state with system scrubber
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
@@ -167,20 +120,4 @@ export function useMediaSession({
       }
     }
   }, [currentTime, duration, isPlaying]);
-
-  // Handle visibility change: automatically resume playback when user returns to app
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isPlaying) {
-        if (silentAudioRef.current && silentAudioRef.current.paused) {
-          silentAudioRef.current.play().catch(() => {});
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isPlaying]);
 }
