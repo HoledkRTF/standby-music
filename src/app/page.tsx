@@ -7,6 +7,7 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useDominantColor } from '@/hooks/useDominantColor';
 import { useLyrics } from '@/hooks/useLyrics';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { usePwaUpdate } from '@/hooks/usePwaUpdate';
 import { AmbientBackground } from '@/components/ambient/AmbientBackground';
 import { HiddenPlayer } from '@/components/standby/HiddenPlayer';
 import { YouTubeMusicView } from '@/components/ytmusic/YouTubeMusicView';
@@ -14,6 +15,13 @@ import { StandByView } from '@/components/standby/StandByView';
 import { CURATED_TRACKS } from '@/data/musicData';
 
 export default function StandByMusicPage() {
+  const [manualStandBy, setManualStandBy] = useState<boolean>(false);
+  const [isNightMode, setIsNightMode] = useState<boolean>(false);
+  const [isCinemaMode, setIsCinemaMode] = useState<boolean>(false);
+
+  // Auto-refresh hook to ensure iOS Home Screen WebClip updates immediately
+  usePwaUpdate();
+
   const {
     state: playerState,
     playTrack,
@@ -30,12 +38,9 @@ export default function StandByMusicPage() {
     onPlayerReady,
     onPlayerStateChange,
     onPlayerError,
-  } = useYouTubePlayer(CURATED_TRACKS);
+  } = useYouTubePlayer(CURATED_TRACKS, isCinemaMode);
 
   const { isLandscape } = useOrientation();
-  const [manualStandBy, setManualStandBy] = useState<boolean>(false);
-  const [isNightMode, setIsNightMode] = useState<boolean>(false);
-  const [isCinemaMode, setIsCinemaMode] = useState<boolean>(false);
 
   // Fullscreen hook for platforms that support it
   const {

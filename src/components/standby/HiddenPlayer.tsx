@@ -65,7 +65,7 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
       if (playerInstanceRef.current && playerInstanceRef.current.destroy) {
         try {
           playerInstanceRef.current.destroy();
-        } catch (e) {
+        } catch {
           // ignore cleanup error
         }
       }
@@ -78,10 +78,9 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
       className={
         isCinemaMode
           ? 'fixed inset-0 z-10 w-full h-[100dvh] bg-black flex items-center justify-center overflow-hidden transition-all duration-300'
-          : 'fixed -bottom-[300px] -right-[300px] w-px h-px opacity-0 pointer-events-none overflow-hidden -z-50'
+          : 'fixed inset-0 w-full h-full -z-50 opacity-[0.001] pointer-events-none overflow-hidden'
       }
     >
-      {/* Video Container centered with cinema aspect ratio */}
       <div className="relative w-full h-full flex items-center justify-center">
         <div
           ref={containerRef}
