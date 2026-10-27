@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-App-Version',
-            value: '1.0.3-zenith-restore',
+            value: '1.0.4-zenith-tag',
           },
         ],
       },

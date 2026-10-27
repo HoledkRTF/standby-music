@@ -254,6 +254,13 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
           <span className="text-xl font-bold tracking-tight text-white flex items-center">
             Music
           </span>
+          <button
+            onClick={() => window.location.replace(`/?v=${Date.now()}`)}
+            className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all active:scale-95 border border-white/10 ml-1"
+            title="App Version - Tap to refresh"
+          >
+            v1.0.4
+          </button>
         </div>
 
         <div className="flex items-center space-x-2">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
-const CURRENT_APP_VERSION = '1.0.3-zenith-restore';
+const CURRENT_APP_VERSION = '1.0.4-zenith-tag';
 
 export function usePwaUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);

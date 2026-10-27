@@ -150,6 +150,13 @@ export const StandByView: React.FC<StandByViewProps> = ({
             <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30 shrink-0">
               Cinema
             </span>
+            <button
+              onClick={() => window.location.replace(`/?v=${Date.now()}`)}
+              className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all active:scale-95 border border-white/10 shrink-0"
+              title="App Version - Tap to refresh"
+            >
+              v1.0.4
+            </button>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -421,6 +428,15 @@ export const StandByView: React.FC<StandByViewProps> = ({
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.3 19.98 10.61 20.35 12 20.35c4.97 0 9-4.03 9-9 0-4.97-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7 0-1.8.69-3.44 1.82-4.69.28-.31.39-.73.29-1.13-.1-.4-.38-.72-.77-.84C4.69 4.84 4 6.34 4 8c0 4.41 3.59 8 8 8 1.66 0 3.16-.69 4.24-1.8.28-.29.41-.69.34-1.09-.07-.4-.33-.74-.71-.89C14.77 11.55 13.43 11 12 11c-1.66 0-3 1.34-3 3 0 .55-.45 1-1 1s-1-.45-1-1c0-2.76 2.24-5 5-5 1.79 0 3.37.95 4.25 2.38C17.63 8.35 15.01 6.5 12 6.5c-3.04 0-5.5 2.46-5.5 5.5 0 3.04 2.46 5.5 5.5 5.5 1.54 0 2.93-.63 3.93-1.65.38-.38 1.01-.39 1.4-.01.4.38.4 1.01.02 1.4C15.89 18.37 14.05 19 12 19z" />
                 </svg>
+              </button>
+
+              {/* App Version badge */}
+              <button
+                onClick={() => window.location.replace(`/?v=${Date.now()}`)}
+                className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all active:scale-95 border border-white/10"
+                title="App Version - Tap to refresh"
+              >
+                v1.0.4
               </button>
 
               {/* Close StandBy */}
