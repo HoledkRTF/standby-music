@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   return NextResponse.json(
     {
-      version: '1.0.2',
-      codename: 'zenith-stream',
+      version: '1.0.3',
+      codename: 'zenith-restore',
       timestamp: Date.now(),
     },
     {

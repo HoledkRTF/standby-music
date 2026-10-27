@@ -38,7 +38,7 @@ export default function StandByMusicPage() {
     onPlayerReady,
     onPlayerStateChange,
     onPlayerError,
-  } = useYouTubePlayer(CURATED_TRACKS, isCinemaMode);
+  } = useYouTubePlayer(CURATED_TRACKS);
 
   const { isLandscape } = useOrientation();
 
