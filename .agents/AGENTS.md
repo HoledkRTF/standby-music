@@ -1,5 +1,5 @@
 ## Recent Codenames
-1. **zenith-stride** (Commit `4ea7549`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
+1. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
 2. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
 3. **zenith-tag** (Commit `f9306ad`, v1.0.4): Visible on-screen version numbers (`v1.0.4`) across StandBy, Cinema, and Portrait headers with one-tap hard cache refresh, and PWA auto-updater (`/api/version`).
 4. **zenith-restore** (Commit `10e1979`, v1.0.3): Complete restoration of direct YouTube Player engine eliminating Vercel serverless stream proxy errors (songs stuck at 0:00), in-viewport player styling, and PWA auto-updater (`/api/version`).
