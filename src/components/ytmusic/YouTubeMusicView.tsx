@@ -57,8 +57,16 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const existingIds = new Set(parsed.map((p: Playlist) => p.id));
-            return [...parsed, ...INITIAL_PLAYLISTS.filter((p) => !existingIds.has(p.id))];
+            // Keep user custom additions but ensure authentic playlists are always present
+            const authenticIds = new Set(INITIAL_PLAYLISTS.map((p) => p.id));
+            const userExtra = parsed.filter(
+              (p: Playlist) =>
+                !authenticIds.has(p.id) &&
+                !p.id.startsWith('pl-todays-hits') &&
+                !p.id.startsWith('pl-chill-lofi') &&
+                !p.id.startsWith('pl-workout-hype')
+            );
+            return [...INITIAL_PLAYLISTS, ...userExtra];
           }
         } catch {
           // ignore error
@@ -78,20 +86,24 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const hasMock = parsed.some((t: Track) => t.id === 'PEM0Vs8jf1w' || t.id === 'H5v3kku4y6Q');
+            if (!hasMock) return parsed;
+          }
         } catch {
           // ignore
         }
       }
     }
-    return CURATED_TRACKS.slice(0, 5);
+    return INITIAL_PLAYLISTS[0]?.tracks?.slice(0, 15) || CURATED_TRACKS.slice(0, 15);
   });
 
   const [syncedPlaylistName, setSyncedPlaylistName] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('standby_synced_playlist_name');
+      const saved = localStorage.getItem('standby_synced_playlist_name');
+      if (saved && saved !== "Today's Biggest Hits") return saved;
     }
-    return null;
+    return INITIAL_PLAYLISTS[0]?.title || 'Mix';
   });
 
   // Sync Modal State
@@ -543,9 +555,16 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             Music
           </span>
           <button
-            onClick={() => window.location.replace(`/?v=${Date.now()}`)}
+            onClick={() => {
+              try {
+                if ('caches' in window) {
+                  caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+                }
+              } catch {}
+              window.location.replace(`/?v=${Date.now()}`);
+            }}
             className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all active:scale-95 border border-white/10 ml-1"
-            title="App Version - Tap to refresh"
+            title="App Version - Tap to force refresh"
           >
             v{APP_VERSION}
           </button>

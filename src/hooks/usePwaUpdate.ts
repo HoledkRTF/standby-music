@@ -54,6 +54,9 @@ export function usePwaUpdate() {
     // Check once on initial mount
     checkVersion();
 
+    // Check periodically in the background (every 30 seconds)
+    const interval = setInterval(checkVersion, 30000);
+
     // Check every time app becomes visible (e.g. user returns from App Switcher or unlocks phone)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -65,6 +68,7 @@ export function usePwaUpdate() {
     window.addEventListener('focus', handleVisibilityChange);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleVisibilityChange);
     };

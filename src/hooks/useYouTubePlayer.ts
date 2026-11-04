@@ -46,17 +46,20 @@ export function useYouTubePlayer(initialTracks: Track[] = []) {
       if (saved) {
         const parsed: Track[] = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setState((prev) => {
-            if (prev.status === 'unstarted') {
-              return {
-                ...prev,
-                currentTrack: parsed[0],
-                queue: parsed.slice(1),
-                duration: parsed[0].duration || 0,
-              };
-            }
-            return prev;
-          });
+          const hasMock = parsed.some((t: Track) => t.id === 'PEM0Vs8jf1w' || t.id === 'H5v3kku4y6Q');
+          if (!hasMock) {
+            setState((prev) => {
+              if (prev.status === 'unstarted') {
+                return {
+                  ...prev,
+                  currentTrack: parsed[0],
+                  queue: parsed.slice(1),
+                  duration: parsed[0].duration || 0,
+                };
+              }
+              return prev;
+            });
+          }
         }
       }
     } catch {

@@ -1,9 +1,9 @@
 ## Recent Codenames
-1. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
-2. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
-3. **zenith-tag** (Commit `f9306ad`, v1.0.4): Visible on-screen version numbers (`v1.0.4`) across StandBy, Cinema, and Portrait headers with one-tap hard cache refresh, and PWA auto-updater (`/api/version`).
-4. **zenith-restore** (Commit `10e1979`, v1.0.3): Complete restoration of direct YouTube Player engine eliminating Vercel serverless stream proxy errors (songs stuck at 0:00), in-viewport player styling, and PWA auto-updater (`/api/version`).
-5. **zenith-stream** (Commit `2dcc85d`, v1.0.2): Dual-engine native HTML5 audio stream engine with server-side range requests (`/api/stream`), real iOS background audio playback via hardware AAC (`audio/mp4`), native lock screen controls, in-viewport fallback player, and PWA auto-updater (`/api/version`).
+1. **zenith-native** (Commit `TBD`, v1.0.7): Pre-loaded authentic 12 YouTube Music playlists (259 tracks) for @HoledkRTF into default library with Mix queue initialization, purged legacy mock tracks, 30s auto-refresh polling, and full-cache-purge version badges.
+2. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
+3. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
+4. **zenith-tag** (Commit `f9306ad`, v1.0.4): Visible on-screen version numbers (`v1.0.4`) across StandBy, Cinema, and Portrait headers with one-tap hard cache refresh, and PWA auto-updater (`/api/version`).
+5. **zenith-restore** (Commit `10e1979`, v1.0.3): Complete restoration of direct YouTube Player engine eliminating Vercel serverless stream proxy errors (songs stuck at 0:00), in-viewport player styling, and PWA auto-updater (`/api/version`).
 
 ## Rules
 - **Commit & Push Workflow**: When instructed to save, commit, or back up code, you must ALWAYS run both `git commit` AND `git push` sequentially. Never leave a commit unpushed. Always explicitly mention the Git commit hash in your response after a successful push.

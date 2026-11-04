@@ -152,9 +152,16 @@ export const StandByView: React.FC<StandByViewProps> = ({
               Cinema
             </span>
             <button
-              onClick={() => window.location.replace(`/?v=${Date.now()}`)}
+              onClick={() => {
+                try {
+                  if ('caches' in window) {
+                    caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+                  }
+                } catch {}
+                window.location.replace(`/?v=${Date.now()}`);
+              }}
               className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all active:scale-95 border border-white/10 shrink-0"
-              title="App Version - Tap to refresh"
+              title="App Version - Tap to force refresh"
             >
               v{APP_VERSION}
             </button>
@@ -433,9 +440,16 @@ export const StandByView: React.FC<StandByViewProps> = ({
 
               {/* App Version badge */}
               <button
-                onClick={() => window.location.replace(`/?v=${Date.now()}`)}
+                onClick={() => {
+                  try {
+                    if ('caches' in window) {
+                      caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+                    }
+                  } catch {}
+                  window.location.replace(`/?v=${Date.now()}`);
+                }}
                 className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all active:scale-95 border border-white/10"
-                title="App Version - Tap to refresh"
+                title="App Version - Tap to force refresh"
               >
                 v{APP_VERSION}
               </button>
