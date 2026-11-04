@@ -1,5 +1,5 @@
 ## Recent Codenames
-1. **zenith-native** (Commit `TBD`, v1.0.7): Pre-loaded authentic 12 YouTube Music playlists (259 tracks) for @HoledkRTF into default library with Mix queue initialization, purged legacy mock tracks, 30s auto-refresh polling, and full-cache-purge version badges.
+1. **zenith-native** (Commit `352fc5b`, v1.0.7): Pre-loaded authentic 12 YouTube Music playlists (259 tracks) for @HoledkRTF into default library with Mix queue initialization, purged legacy mock tracks, 30s auto-refresh polling, and full-cache-purge version badges.
 2. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
 3. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
 4. **zenith-tag** (Commit `f9306ad`, v1.0.4): Visible on-screen version numbers (`v1.0.4`) across StandBy, Cinema, and Portrait headers with one-tap hard cache refresh, and PWA auto-updater (`/api/version`).
