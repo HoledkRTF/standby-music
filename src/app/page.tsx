@@ -58,6 +58,16 @@ export default function StandByMusicPage() {
     setIsStandByDismissed(false);
   }, [isLandscape]);
 
+  // Suppress OS-level media session metadata to prevent Dynamic Island and lock screen hijacking
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = 'none';
+      } catch {}
+    }
+  }, [playerState.currentTrack]);
+
   // Screen wake lock during active playback
   const isPlaying = playerState.status === 'playing';
   useWakeLock(isPlaying && isStandByActive);

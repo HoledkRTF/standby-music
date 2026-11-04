@@ -40,7 +40,19 @@ export const HiddenPlayer: React.FC<HiddenPlayerProps> = ({
               origin: typeof window !== 'undefined' ? window.location.origin : '',
             },
             events: {
-              onReady,
+              onReady: (event: any) => {
+                try {
+                  const iframe = containerRef.current?.querySelector('iframe');
+                  if (iframe) {
+                    iframe.setAttribute('allow', 'autoplay; encrypted-media; mediasession \'none\'');
+                  }
+                  if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = null;
+                    navigator.mediaSession.playbackState = 'none';
+                  }
+                } catch {}
+                onReady(event);
+              },
               onStateChange,
               onError,
             },

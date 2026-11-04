@@ -8,7 +8,11 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-App-Version',
-            value: '1.0.4-zenith-tag',
+            value: '1.0.8-zenith-clean',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'mediasession=()',
           },
         ],
       },
