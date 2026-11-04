@@ -1,5 +1,5 @@
 ## Recent Codenames
-1. **zenith-clean** (Commit `TBD`, v1.0.8): Suppressed Dynamic Island media session hijacking via HTTP Permissions-Policy `mediasession=()`, iframe allow restriction, and client-side mediaSession metadata purging.
+1. **zenith-clean** (Commit `5110dd7`, v1.0.8): Suppressed Dynamic Island media session hijacking via HTTP Permissions-Policy `mediasession=()`, iframe allow restriction, and client-side mediaSession metadata purging.
 2. **zenith-native** (Commit `352fc5b`, v1.0.7): Pre-loaded authentic 12 YouTube Music playlists (259 tracks) for @HoledkRTF into default library with Mix queue initialization, purged legacy mock tracks, 30s auto-refresh polling, and full-cache-purge version badges.
 3. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
 4. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
