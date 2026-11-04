@@ -14,6 +14,7 @@ interface PlaylistDetailModalProps {
   onPlayTrack: (track: Track) => void;
   onAddToQueue: (track: Track) => void;
   onSetAsQuickPicks?: (tracks: Track[], playlistTitle: string) => void;
+  onUpdatePlaylist?: (updated: Playlist) => void;
 }
 
 export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
@@ -22,11 +23,48 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
   isPlaying = false,
   onClose,
   onPlayPlaylist,
+  onPlayTrack,
   onAddToQueue,
   onSetAsQuickPicks,
+  onUpdatePlaylist,
 }) => {
   const [pinnedNotice, setPinnedNotice] = React.useState<string | null>(null);
-  const totalDuration = playlist.tracks.reduce((acc, t) => acc + (t.duration || 180), 0);
+  const [tracks, setTracks] = React.useState<Track[]>(playlist.tracks || []);
+  const [isLoading, setIsLoading] = React.useState<boolean>((playlist.tracks || []).length === 0);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+
+  // Lazy-load tracks if not yet loaded (e.g. from channel playlists discovery)
+  React.useEffect(() => {
+    if ((!playlist.tracks || playlist.tracks.length === 0) && playlist.id) {
+      setIsLoading(true);
+      setLoadError(null);
+      const rawId = playlist.id.replace(/^pl-/, '');
+      fetch(`/api/playlist?url=${encodeURIComponent(rawId)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.playlist?.tracks && data.playlist.tracks.length > 0) {
+            setTracks(data.playlist.tracks);
+            if (onUpdatePlaylist) {
+              onUpdatePlaylist({
+                ...playlist,
+                tracks: data.playlist.tracks,
+                coverUrl: playlist.coverUrl || data.playlist.coverUrl,
+              });
+            }
+          } else {
+            setLoadError(data.error || 'No playable songs found in this playlist');
+          }
+        })
+        .catch((err) => {
+          setLoadError(err.message || 'Failed to load songs');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [playlist.id]);
+
+  const totalDuration = tracks.reduce((acc, t) => acc + (t.duration || 180), 0);
   const totalMinutes = Math.round(totalDuration / 60);
 
   return (
@@ -81,15 +119,16 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
               {playlist.description}
             </p>
             <p className="text-xs text-white/40 pt-1 font-medium">
-              {playlist.creator} • {playlist.tracks.length} songs • {totalMinutes} min
+              {playlist.creator} • {tracks.length} songs • {totalMinutes} min
             </p>
           </div>
 
           {/* Action Buttons: Play All & Shuffle */}
           <div className="flex items-center justify-center space-x-3 pt-2 w-full max-w-xs">
             <button
-              onClick={() => onPlayPlaylist(playlist.tracks, 0)}
-              className="flex-1 flex items-center justify-center space-x-2 py-3 px-5 bg-white text-black font-bold text-sm rounded-full shadow-xl hover:bg-white/90 active:scale-95 transition-all"
+              onClick={() => onPlayPlaylist(tracks, 0)}
+              disabled={isLoading || tracks.length === 0}
+              className="flex-1 flex items-center justify-center space-x-2 py-3 px-5 bg-white text-black font-bold text-sm rounded-full shadow-xl hover:bg-white/90 active:scale-95 transition-all disabled:opacity-50"
             >
               <svg className="w-4 h-4 fill-black" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
@@ -99,10 +138,11 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
 
             <button
               onClick={() => {
-                const shuffled = [...playlist.tracks].sort(() => Math.random() - 0.5);
+                const shuffled = [...tracks].sort(() => Math.random() - 0.5);
                 onPlayPlaylist(shuffled, 0);
               }}
-              className="flex-1 flex items-center justify-center space-x-2 py-3 px-5 bg-white/10 text-white font-semibold text-sm rounded-full border border-white/15 hover:bg-white/20 active:scale-95 transition-all"
+              disabled={isLoading || tracks.length === 0}
+              className="flex-1 flex items-center justify-center space-x-2 py-3 px-5 bg-white/10 text-white font-semibold text-sm rounded-full border border-white/15 hover:bg-white/20 active:scale-95 transition-all disabled:opacity-50"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
@@ -112,10 +152,10 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
           </div>
 
           {/* Pin as Home Quick Picks */}
-          {onSetAsQuickPicks && playlist.tracks.length > 0 && (
+          {onSetAsQuickPicks && tracks.length > 0 && (
             <button
               onClick={() => {
-                onSetAsQuickPicks(playlist.tracks, playlist.title);
+                onSetAsQuickPicks(tracks, playlist.title);
                 setPinnedNotice('Pinned to Home Quick picks!');
                 setTimeout(() => setPinnedNotice(null), 2500);
               }}
@@ -126,78 +166,114 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
           )}
         </div>
 
+        {/* Loading / Error States */}
+        {isLoading && (
+          <div className="py-12 flex flex-col items-center justify-center space-y-3">
+            <div className="w-7 h-7 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-white/60 font-medium">Loading songs from YouTube Music...</p>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="p-4 rounded-2xl bg-red-950/40 border border-red-800/40 text-center space-y-2">
+            <p className="text-xs text-red-300 font-medium">{loadError}</p>
+            <button
+              onClick={() => {
+                setIsLoading(true);
+                setLoadError(null);
+                const rawId = playlist.id.replace(/^pl-/, '');
+                fetch(`/api/playlist?url=${encodeURIComponent(rawId)}`)
+                  .then((res) => res.json())
+                  .then((data) => {
+                    if (data.playlist?.tracks) setTracks(data.playlist.tracks);
+                  })
+                  .catch((err) => setLoadError(err.message))
+                  .finally(() => setIsLoading(false));
+              }}
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Tracks List */}
-        <div className="space-y-1 divide-y divide-white/5 pt-2">
-          {playlist.tracks.map((track, idx) => {
-            const isCurrent = track.id === currentTrackId;
+        {!isLoading && (
+          <div className="space-y-1 divide-y divide-white/5 pt-2">
+            {tracks.map((track, idx) => {
+              const isCurrent = track.id === currentTrackId;
 
-            return (
-              <div
-                key={`${track.id}-${idx}`}
-                className={`flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/10 active:bg-white/15 transition-all group cursor-pointer ${
-                  isCurrent ? 'bg-white/10 border border-white/10' : ''
-                }`}
-                onClick={() => onPlayPlaylist(playlist.tracks, idx)}
-              >
-                <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                  {/* Track Number / Equalizer */}
-                  <div className="w-5 flex items-center justify-center shrink-0">
-                    {isCurrent && isPlaying ? (
-                      <EqualizerBars isPlaying={true} />
-                    ) : (
-                      <span className={`text-xs font-semibold ${isCurrent ? 'text-red-400 font-bold' : 'text-white/40'}`}>
-                        {idx + 1}
-                      </span>
-                    )}
+              return (
+                <div
+                  key={`${track.id}-${idx}`}
+                  className={`flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/10 active:bg-white/15 transition-all group cursor-pointer ${
+                    isCurrent ? 'bg-white/10 border border-white/10' : ''
+                  }`}
+                  onClick={() => {
+                    onPlayTrack(track);
+                    onPlayPlaylist(tracks, idx);
+                  }}
+                >
+                  <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                    {/* Track Number / Equalizer */}
+                    <div className="w-5 flex items-center justify-center shrink-0">
+                      {isCurrent && isPlaying ? (
+                        <EqualizerBars isPlaying={true} />
+                      ) : (
+                        <span className={`text-xs font-semibold ${isCurrent ? 'text-red-400 font-bold' : 'text-white/40'}`}>
+                          {idx + 1}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Thumbnail */}
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/5 border border-white/10 shadow-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={track.thumbnail}
+                        alt={track.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-sm font-semibold truncate ${
+                          isCurrent ? 'text-red-400 font-bold' : 'text-white'
+                        }`}
+                      >
+                        {track.title}
+                      </p>
+                      <p className="text-xs text-white/50 truncate mt-0.5 font-medium">
+                        {track.artist}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Thumbnail */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/5 border border-white/10 shadow-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={track.thumbnail}
-                      alt={track.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Info */}
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className={`text-sm font-semibold truncate ${
-                        isCurrent ? 'text-red-400 font-bold' : 'text-white'
-                      }`}
+                  {/* Right Duration & Action */}
+                  <div className="flex items-center space-x-2 pl-3">
+                    <span className="text-xs font-mono tabular-nums text-white/40">
+                      {formatTime(track.duration)}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToQueue(track);
+                      }}
+                      className="p-2 text-white/40 hover:text-white rounded-full hover:bg-white/10 active:scale-90 transition-transform"
+                      title="Add to queue"
                     >
-                      {track.title}
-                    </p>
-                    <p className="text-xs text-white/50 truncate mt-0.5 font-medium">
-                      {track.artist}
-                    </p>
+                      <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-
-                {/* Right Duration & Action */}
-                <div className="flex items-center space-x-2 pl-3">
-                  <span className="text-xs font-mono tabular-nums text-white/40">
-                    {formatTime(track.duration)}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddToQueue(track);
-                    }}
-                    className="p-2 text-white/40 hover:text-white rounded-full hover:bg-white/10 active:scale-90 transition-transform"
-                    title="Add to queue"
-                  >
-                    <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -11,15 +11,19 @@ import { formatTime, extractPlaylistId } from '@/utils/youtube';
 interface YouTubeMusicViewProps {
   playerState: PlayerState;
   isFullscreen?: boolean;
-  onSelectTrack: (track: Track) => void;
+  onSelectTrack?: (track: Track) => void;
+  onPlayTrack?: (track: Track) => void;
   onPlayPlaylist: (tracks: Track[], startIndex?: number) => void;
-  onAddToQueue: (track: Track) => void;
-  onRemoveFromQueue: (index: number) => void;
+  onAddToQueue?: (track: Track) => void;
+  onRemoveFromQueue?: (index: number) => void;
   onTogglePlay: () => void;
-  onNextTrack: () => void;
+  onNextTrack?: () => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+  onSeek?: (seconds: number) => void;
   onEnterStandBy: () => void;
   onEnterCinemaMode: () => void;
-  onToggleFullscreen: () => void;
+  onToggleFullscreen?: () => void;
 }
 
 type TabType = 'home' | 'explore' | 'library' | 'search';
@@ -28,13 +32,21 @@ type CategoryFilter = 'all' | 'relax' | 'workout' | 'focus' | 'energize' | 'comm
 export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
   playerState,
   onSelectTrack,
+  onPlayTrack,
   onPlayPlaylist,
   onAddToQueue,
+  onRemoveFromQueue,
   onTogglePlay,
   onNextTrack,
+  onNext,
   onEnterStandBy,
   onEnterCinemaMode,
 }) => {
+  const handleSelectTrack = onSelectTrack || onPlayTrack || (() => {});
+  const handleNextTrack = onNextTrack || onNext || (() => {});
+  const handleAddToQueue = onAddToQueue || (() => {});
+  const handleRemoveFromQueue = onRemoveFromQueue || (() => {});
+
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const [playlists, setPlaylists] = useState<Playlist[]>(() => {
@@ -43,7 +55,10 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          return [...parsed, ...INITIAL_PLAYLISTS];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingIds = new Set(parsed.map((p: Playlist) => p.id));
+            return [...parsed, ...INITIAL_PLAYLISTS.filter((p) => !existingIds.has(p.id))];
+          }
         } catch {
           // ignore error
         }
@@ -78,13 +93,29 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
     return null;
   });
 
+  // Sync Modal State
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncTab, setSyncTab] = useState<'channel' | 'batch' | 'curated' | 'single' | 'backup'>('channel');
   const [syncInputUrl, setSyncInputUrl] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
-  const [showSyncModal, setShowSyncModal] = useState(false);
 
-  // Sync playlist function
+  // Channel discovery state
+  const [channelInput, setChannelInput] = useState('');
+  const [isSearchingChannel, setIsSearchingChannel] = useState(false);
+  const [channelResults, setChannelResults] = useState<{
+    channelTitle: string;
+    count: number;
+    playlists: Array<{ id: string; title: string; thumbnail: string; itemCountText?: string }>;
+  } | null>(null);
+  const [selectedChannelPlaylists, setSelectedChannelPlaylists] = useState<Set<string>>(new Set());
+
+  // Batch paste state
+  const [batchInputText, setBatchInputText] = useState('');
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; currentTitle?: string } | null>(null);
+
+  // Sync single playlist function
   const handleSyncPlaylist = async (urlOrId: string) => {
     if (!urlOrId.trim()) return;
     setIsSyncing(true);
@@ -134,6 +165,262 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  // Discover all playlists for a channel / handle
+  const handleSearchChannel = async () => {
+    if (!channelInput.trim()) return;
+    setIsSearchingChannel(true);
+    setSyncError(null);
+    setChannelResults(null);
+    try {
+      const res = await fetch(`/api/channel-playlists?channel=${encodeURIComponent(channelInput.trim())}`);
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to find channel playlists');
+      }
+      setChannelResults(data);
+      setSelectedChannelPlaylists(new Set(data.playlists.map((p: any) => p.id)));
+    } catch (err: any) {
+      setSyncError(err.message || 'Could not find channel. Verify the handle or URL.');
+    } finally {
+      setIsSearchingChannel(false);
+    }
+  };
+
+  // Import all or selected playlists from channel discovery
+  const handleImportChannelPlaylists = () => {
+    if (!channelResults || channelResults.playlists.length === 0) return;
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      const toImport = channelResults.playlists.filter((p) => selectedChannelPlaylists.has(p.id));
+      if (toImport.length === 0) {
+        throw new Error('Please select at least one playlist to import');
+      }
+
+      const newPlaylists: Playlist[] = toImport.map((item) => ({
+        id: `pl-${item.id}`,
+        title: item.title,
+        description: `Imported from ${channelResults.channelTitle} (${item.itemCountText || 'Playlist'})`,
+        creator: channelResults.channelTitle || 'YouTube Music',
+        coverUrl: item.thumbnail,
+        tracks: [],
+        category: 'all',
+        isUserCreated: true,
+      }));
+
+      const existingIds = new Set(newPlaylists.map((p) => p.id));
+      const updated = [...newPlaylists, ...playlists.filter((p) => !existingIds.has(p.id))];
+      setPlaylists(updated);
+      if (typeof window !== 'undefined') {
+        const userOnly = updated.filter((p) => p.isUserCreated);
+        localStorage.setItem('standby_user_playlists', JSON.stringify(userOnly));
+      }
+
+      setShowSyncModal(false);
+      setChannelResults(null);
+      setChannelInput('');
+      setSyncNotice(`Imported ${newPlaylists.length} playlists from ${channelResults.channelTitle}!`);
+      setTimeout(() => setSyncNotice(null), 4000);
+    } catch (err: any) {
+      setSyncError(err.message || 'Import failed');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Batch import multiple playlist links
+  const handleBatchImport = async () => {
+    if (!batchInputText.trim()) return;
+    setIsSyncing(true);
+    setSyncError(null);
+
+    const matches = Array.from(batchInputText.matchAll(/(?:list=|\/playlist\/)([a-zA-Z0-9_-]+)/gi));
+    const extractedIds = Array.from(new Set(matches.map((m) => m[1])));
+
+    if (extractedIds.length === 0) {
+      const rawLines = batchInputText.split(/[\n,\s]+/).map((s) => s.trim()).filter((s) => s.length >= 10);
+      if (rawLines.length > 0) {
+        extractedIds.push(...Array.from(new Set(rawLines)));
+      }
+    }
+
+    if (extractedIds.length === 0) {
+      setSyncError('No valid playlist links found. Paste lines containing YouTube playlist URLs.');
+      setIsSyncing(false);
+      return;
+    }
+
+    const importedPlaylists: Playlist[] = [];
+    for (let i = 0; i < extractedIds.length; i++) {
+      const id = extractedIds[i];
+      setBatchProgress({ current: i + 1, total: extractedIds.length, currentTitle: `Playlist ${i + 1}` });
+      try {
+        const res = await fetch(`/api/playlist?url=${encodeURIComponent(id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.playlist && data.playlist.tracks?.length > 0) {
+            importedPlaylists.push(data.playlist);
+          }
+        }
+      } catch (e) {
+        console.warn(`Failed to import ${id}`, e);
+      }
+    }
+
+    if (importedPlaylists.length === 0) {
+      setSyncError('Could not load any playlists. Ensure they are public or unlisted.');
+      setIsSyncing(false);
+      setBatchProgress(null);
+      return;
+    }
+
+    const existingIds = new Set(importedPlaylists.map((p) => p.id));
+    const updated = [...importedPlaylists, ...playlists.filter((p) => !existingIds.has(p.id))];
+    setPlaylists(updated);
+    if (typeof window !== 'undefined') {
+      const userOnly = updated.filter((p) => p.isUserCreated);
+      localStorage.setItem('standby_user_playlists', JSON.stringify(userOnly));
+    }
+
+    if (importedPlaylists[0]?.tracks?.length > 0) {
+      setQuickPicks(importedPlaylists[0].tracks);
+      setSyncedPlaylistName(importedPlaylists[0].title);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('standby_user_quick_picks', JSON.stringify(importedPlaylists[0].tracks));
+        localStorage.setItem('standby_synced_playlist_name', importedPlaylists[0].title);
+      }
+    }
+
+    setBatchProgress(null);
+    setBatchInputText('');
+    setShowSyncModal(false);
+    setIsSyncing(false);
+    setSyncNotice(`Imported ${importedPlaylists.length} playlists to your Library!`);
+    setTimeout(() => setSyncNotice(null), 4000);
+  };
+
+  // Curated flagship YouTube Music essentials
+  const CURATED_ESSENTIALS = [
+    {
+      id: 'PL4fGSIFgk5kWV6Vb5v9zQ1v9Z7v5N4e0p',
+      title: "Today's Biggest Hits",
+      subtitle: 'The hottest chart-toppers on YouTube Music right now',
+      cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600',
+    },
+    {
+      id: 'PL4fGSIFgk5jWCEfO_H62q_4v3fV7pQG8S',
+      title: 'Top 50 Global',
+      subtitle: 'The most popular songs streaming worldwide',
+      cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600',
+    },
+    {
+      id: 'PLsCPTY_MPoPaND9NRG0rgqg_c3Tb5D52A',
+      title: 'HIT ME HARD AND SOFT',
+      subtitle: 'Billie Eilish Album & Complete Tracklist',
+      cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600',
+    },
+    {
+      id: 'RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g',
+      title: 'Chill Lo-Fi Vibes',
+      subtitle: 'Relaxing ambient beats for coding and unwinding',
+      cover: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600',
+    },
+    {
+      id: 'PL4fGSIFgk5kXQ1b3h-9o',
+      title: 'Deep Focus & Flow',
+      subtitle: 'Instrumental concentration and study soundscapes',
+      cover: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600',
+    },
+    {
+      id: 'PL4fGSIFgk5kU8v_m',
+      title: 'Late Night Synthwave',
+      subtitle: 'Retrowave neon highway cruising',
+      cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600',
+    },
+  ];
+
+  const handleAddCuratedEssential = async (item: typeof CURATED_ESSENTIALS[0]) => {
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      const res = await fetch(`/api/playlist?url=${encodeURIComponent(item.id)}`);
+      let newPl: Playlist;
+      if (res.ok) {
+        const data = await res.json();
+        newPl = data.playlist;
+      } else {
+        newPl = {
+          id: `pl-${item.id}`,
+          title: item.title,
+          description: item.subtitle,
+          creator: 'YouTube Music',
+          coverUrl: item.cover,
+          tracks: [],
+          category: 'all',
+          isUserCreated: true,
+        };
+      }
+      const existing = playlists.filter((p) => p.id !== newPl.id);
+      const updated = [newPl, ...existing];
+      setPlaylists(updated);
+      if (typeof window !== 'undefined') {
+        const userOnly = updated.filter((p) => p.isUserCreated);
+        localStorage.setItem('standby_user_playlists', JSON.stringify(userOnly));
+      }
+      setSyncNotice(`Added "${item.title}" to your Library!`);
+      setTimeout(() => setSyncNotice(null), 3000);
+    } catch (e: any) {
+      setSyncError(e.message || 'Failed to add playlist');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleExportLibrary = () => {
+    const userPlaylists = playlists.filter((p) => p.isUserCreated);
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(userPlaylists, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `ytmusic_library_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    setSyncNotice('Library exported as JSON!');
+    setTimeout(() => setSyncNotice(null), 3000);
+  };
+
+  const handleImportLibraryJson = (jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!Array.isArray(parsed)) throw new Error('File must contain an array of playlists');
+      const validPlaylists: Playlist[] = parsed.filter((p) => p && p.title && p.id);
+      if (validPlaylists.length === 0) throw new Error('No valid playlists found');
+      const existingIds = new Set(validPlaylists.map((p) => p.id));
+      const updated = [...validPlaylists, ...playlists.filter((p) => !existingIds.has(p.id))];
+      setPlaylists(updated);
+      if (typeof window !== 'undefined') {
+        const userOnly = updated.filter((p) => p.isUserCreated);
+        localStorage.setItem('standby_user_playlists', JSON.stringify(userOnly));
+      }
+      setShowSyncModal(false);
+      setSyncNotice(`Restored ${validPlaylists.length} playlists!`);
+      setTimeout(() => setSyncNotice(null), 4000);
+    } catch (err: any) {
+      setSyncError(err.message || 'Failed to parse JSON file');
+    }
+  };
+
+  const handleDeletePlaylist = (id: string) => {
+    const updated = playlists.filter((p) => p.id !== id);
+    setPlaylists(updated);
+    if (typeof window !== 'undefined') {
+      const userOnly = updated.filter((p) => p.isUserCreated);
+      localStorage.setItem('standby_user_playlists', JSON.stringify(userOnly));
+    }
+    setSyncNotice('Playlist removed from Library');
+    setTimeout(() => setSyncNotice(null), 2500);
   };
 
   const handleSetAsQuickPicks = (tracks: Track[], title: string) => {
@@ -259,7 +546,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all active:scale-95 border border-white/10 ml-1"
             title="App Version - Tap to refresh"
           >
-            v1.0.4
+            v1.0.5
           </button>
         </div>
 
@@ -459,7 +746,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                   return (
                     <div
                       key={track.id}
-                      onClick={() => onSelectTrack(track)}
+                      onClick={() => handleSelectTrack(track)}
                       className={`flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/10 active:bg-white/15 transition-all cursor-pointer group ${
                         isCurrent ? 'bg-white/10 border border-white/15' : 'bg-transparent'
                       }`}
@@ -495,7 +782,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onAddToQueue(track);
+                            handleAddToQueue(track);
                           }}
                           className="p-1.5 text-white/40 hover:text-white rounded-full hover:bg-white/10 active:scale-90 transition-transform"
                           title="Add to queue"
@@ -584,7 +871,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 {CURATED_TRACKS.slice(5, 9).map((track) => (
                   <div
                     key={track.id}
-                    onClick={() => onSelectTrack(track)}
+                    onClick={() => handleSelectTrack(track)}
                     className="p-3 bg-white/5 hover:bg-white/10 active:bg-white/15 rounded-2xl border border-white/5 transition-all cursor-pointer space-y-2 group"
                   >
                     <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-white/10 shadow-sm">
@@ -739,18 +1026,38 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                     </div>
                   </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onPlayPlaylist(pl.tracks, 0);
-                    }}
-                    className="p-2.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white active:scale-90 transition-transform"
-                    title="Play"
-                  >
-                    <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center space-x-1 shrink-0">
+                    {pl.isUserCreated && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePlaylist(pl.id);
+                        }}
+                        className="p-2 text-white/30 hover:text-red-400 rounded-full hover:bg-white/10 active:scale-90 transition-all"
+                        title="Remove playlist from Library"
+                      >
+                        <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (pl.tracks && pl.tracks.length > 0) {
+                          onPlayPlaylist(pl.tracks, 0);
+                        } else {
+                          setSelectedPlaylist(pl);
+                        }
+                      }}
+                      className="p-2.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white active:scale-90 transition-transform"
+                      title="Play"
+                    >
+                      <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -819,7 +1126,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                 {searchResults.map((track) => (
                   <div
                     key={track.id}
-                    onClick={() => onSelectTrack(track)}
+                    onClick={() => handleSelectTrack(track)}
                     className="flex items-center justify-between p-2 rounded-2xl hover:bg-white/10 active:bg-white/15 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -858,7 +1165,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onAddToQueue(track);
+                          handleAddToQueue(track);
                         }}
                         className="p-1.5 text-white/40 hover:text-white rounded-full hover:bg-white/10 active:scale-90 transition-transform"
                         title="Add to queue"
@@ -955,7 +1262,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onNextTrack();
+                  handleNextTrack();
                 }}
                 className="p-2 text-white/80 hover:text-white hover:scale-105 active:scale-90 transition-transform"
                 title="Next"
@@ -1029,9 +1336,18 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
           isPlaying={isPlaying}
           onClose={() => setSelectedPlaylist(null)}
           onPlayPlaylist={onPlayPlaylist}
-          onPlayTrack={onSelectTrack}
-          onAddToQueue={onAddToQueue}
+          onPlayTrack={handleSelectTrack}
+          onAddToQueue={handleAddToQueue}
           onSetAsQuickPicks={handleSetAsQuickPicks}
+          onUpdatePlaylist={(updated) => {
+            const updatedList = playlists.map((p) => (p.id === updated.id ? updated : p));
+            setPlaylists(updatedList);
+            setSelectedPlaylist(updated);
+            if (typeof window !== 'undefined') {
+              const userOnly = updatedList.filter((p) => p.isUserCreated);
+              localStorage.setItem('standby_user_playlists', JSON.stringify(userOnly));
+            }
+          }}
         />
       )}
 
@@ -1040,76 +1356,353 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
         <NewPlaylistModal
           onClose={() => setShowNewPlaylistModal(false)}
           onCreatePlaylist={handleCreatePlaylist}
-          onImportTrack={onSelectTrack}
+          onImportTrack={handleSelectTrack}
         />
       )}
 
-      {/* Standalone Sync YouTube Music Modal */}
+      {/* Enhanced Multi-Method YouTube Music Sync Modal */}
       {showSyncModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn select-none">
-          <div className="bg-[#1c1c1e] w-full max-w-md rounded-3xl border border-white/10 p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center shadow-md">
-                  <svg className="w-3 h-3 fill-white ml-0.5" viewBox="0 0 24 24">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn select-none">
+          <div className="bg-[#1c1c1e] w-full max-w-lg rounded-3xl border border-white/10 p-5 sm:p-6 space-y-4 shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center shadow-md">
+                  <svg className="w-3.5 h-3.5 fill-white ml-0.5" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-bold text-white">Sync YouTube Music Playlist</h2>
+                <div>
+                  <h2 className="text-base font-bold text-white leading-tight">Bring YouTube Music Libraries</h2>
+                  <p className="text-[11px] text-white/50">Import playlists, channels, or full libraries</p>
+                </div>
               </div>
               <button
-                onClick={() => setShowSyncModal(false)}
-                className="p-1.5 text-white/50 hover:text-white rounded-full hover:bg-white/10"
+                onClick={() => {
+                  setShowSyncModal(false);
+                  setChannelResults(null);
+                  setSyncError(null);
+                }}
+                className="p-1.5 text-white/50 hover:text-white rounded-full hover:bg-white/10 active:scale-95 transition-all"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-white/60 leading-relaxed">
-              Paste the link to any YouTube Music or YouTube playlist. All songs will be loaded directly into your Home Quick picks and Library.
-            </p>
-
-            <div className="space-y-3">
-              <input
-                type="text"
-                autoFocus
-                value={syncInputUrl}
-                onChange={(e) => setSyncInputUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSyncPlaylist(syncInputUrl)}
-                placeholder="https://music.youtube.com/playlist?list=..."
-                className="w-full px-3.5 py-3 bg-white/10 text-white placeholder-white/30 rounded-xl text-sm outline-none border border-white/15 focus:border-red-500 transition-colors"
-              />
-
-              {syncError && (
-                <p className="text-xs text-red-400 bg-red-950/40 p-2.5 rounded-xl border border-red-800/40">{syncError}</p>
-              )}
-
-              <div className="flex items-center space-x-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSyncModal(false)}
-                  className="flex-1 py-2.5 bg-white/10 text-white text-xs font-semibold rounded-xl hover:bg-white/15 active:scale-95 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSyncPlaylist(syncInputUrl)}
-                  disabled={isSyncing || !syncInputUrl.trim()}
-                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-1.5"
-                >
-                  {isSyncing ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <span>Sync & Play</span>
-                  )}
-                </button>
-              </div>
+            {/* Sync Method Tabs */}
+            <div className="flex items-center space-x-1.5 p-1 bg-white/5 rounded-2xl border border-white/10 text-xs shrink-0 overflow-x-auto scrollbar-none">
+              <button
+                onClick={() => {
+                  setSyncTab('channel');
+                  setSyncError(null);
+                }}
+                className={`flex-1 py-1.5 px-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+                  syncTab === 'channel' ? 'bg-red-600 text-white shadow-md' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Channel (@)
+              </button>
+              <button
+                onClick={() => {
+                  setSyncTab('batch');
+                  setSyncError(null);
+                }}
+                className={`flex-1 py-1.5 px-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+                  syncTab === 'batch' ? 'bg-red-600 text-white shadow-md' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Paste Links
+              </button>
+              <button
+                onClick={() => {
+                  setSyncTab('curated');
+                  setSyncError(null);
+                }}
+                className={`flex-1 py-1.5 px-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+                  syncTab === 'curated' ? 'bg-red-600 text-white shadow-md' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Essentials
+              </button>
+              <button
+                onClick={() => {
+                  setSyncTab('backup');
+                  setSyncError(null);
+                }}
+                className={`flex-1 py-1.5 px-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+                  syncTab === 'backup' ? 'bg-red-600 text-white shadow-md' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Backup
+              </button>
             </div>
 
-            <div className="border-t border-white/10 pt-3 text-[11px] text-white/40 space-y-1">
-              <p>• In YouTube Music app: Tap your playlist → Share → Copy link</p>
-              <p>• Supports unlisted and public playlists</p>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs">
+              {/* Error Banner */}
+              {syncError && (
+                <div className="p-3 rounded-xl bg-red-950/60 border border-red-800/60 text-red-300 font-medium leading-relaxed">
+                  {syncError}
+                </div>
+              )}
+
+              {/* TAB 1: Channel / Profile Sync */}
+              {syncTab === 'channel' && (
+                <div className="space-y-3">
+                  <p className="text-white/70 leading-relaxed">
+                    Enter your YouTube / YouTube Music handle or channel link (e.g. <span className="font-mono text-amber-300">@username</span> or <span className="font-mono text-amber-300">music.youtube.com/channel/UC...</span>) to automatically discover and import all your public playlists at once.
+                  </p>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={channelInput}
+                      onChange={(e) => setChannelInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchChannel()}
+                      placeholder="@billieeilish or channel URL"
+                      className="flex-1 px-3.5 py-2.5 bg-white/10 text-white placeholder-white/30 rounded-xl outline-none border border-white/15 focus:border-red-500 transition-colors font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearchChannel}
+                      disabled={isSearchingChannel || !channelInput.trim()}
+                      className="px-4 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-md active:scale-95 transition-all shrink-0 flex items-center space-x-1.5"
+                    >
+                      {isSearchingChannel ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <span>Find All</span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Channel Discovery Results */}
+                  {channelResults && (
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+                        <div>
+                          <span className="font-bold text-white">{channelResults.channelTitle}</span>
+                          <span className="text-white/50 ml-2">({channelResults.playlists.length} playlists found)</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setSelectedChannelPlaylists(new Set(channelResults.playlists.map((p) => p.id)))}
+                            className="text-red-400 hover:underline font-semibold"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-white/20">•</span>
+                          <button
+                            onClick={() => setSelectedChannelPlaylists(new Set())}
+                            className="text-white/40 hover:underline"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Scrollable list of found playlists */}
+                      <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+                        {channelResults.playlists.map((item) => {
+                          const isSelected = selectedChannelPlaylists.has(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                const next = new Set(selectedChannelPlaylists);
+                                if (isSelected) next.delete(item.id);
+                                else next.add(item.id);
+                                setSelectedChannelPlaylists(next);
+                              }}
+                              className={`flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer ${
+                                isSelected ? 'bg-white/15 border-red-500/50' : 'bg-white/5 border-white/5 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {}}
+                                  className="w-4 h-4 rounded accent-red-600 shrink-0"
+                                />
+                                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-white/10">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-white truncate text-xs">{item.title}</p>
+                                  <p className="text-[10px] text-white/50 truncate">{item.itemCountText || 'Playlist'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={handleImportChannelPlaylists}
+                        disabled={selectedChannelPlaylists.size === 0 || isSyncing}
+                        className="w-full py-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2"
+                      >
+                        {isSyncing ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <span>Import All {selectedChannelPlaylists.size} Playlists to Library</span>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: Batch Paste Multiple Links */}
+              {syncTab === 'batch' && (
+                <div className="space-y-3">
+                  <p className="text-white/70 leading-relaxed">
+                    Paste one or multiple YouTube Music / YouTube playlist links below (one per line, or separated by commas/spaces).
+                  </p>
+
+                  <textarea
+                    rows={4}
+                    value={batchInputText}
+                    onChange={(e) => setBatchInputText(e.target.value)}
+                    placeholder="https://music.youtube.com/playlist?list=PL...&#10;https://music.youtube.com/playlist?list=PL..."
+                    className="w-full p-3 bg-white/10 text-white placeholder-white/30 rounded-xl outline-none border border-white/15 focus:border-red-500 transition-colors font-mono text-xs leading-relaxed"
+                  />
+
+                  {batchProgress && (
+                    <div className="p-3 rounded-xl bg-white/10 space-y-1.5 border border-white/10">
+                      <div className="flex justify-between items-center text-[11px] font-semibold text-white/80">
+                        <span>Importing playlist {batchProgress.current} of {batchProgress.total}...</span>
+                        <span>{Math.round((batchProgress.current / batchProgress.total) * 100)}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-red-600 transition-all duration-300"
+                          style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleBatchImport}
+                    disabled={isSyncing || !batchInputText.trim()}
+                    className="w-full py-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2"
+                  >
+                    {isSyncing ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span>Import All Playlists</span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 3: Curated Flagship Essentials */}
+              {syncTab === 'curated' && (
+                <div className="space-y-3">
+                  <p className="text-white/70 leading-relaxed">
+                    Instantly load official YouTube Music flagship charts and curated playlists into your library:
+                  </p>
+
+                  <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                    {CURATED_ESSENTIALS.map((item) => {
+                      const isAlreadyAdded = playlists.some((p) => p.id === `pl-${item.id}` || p.id === item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0 flex-1">
+                            <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-white/10 shadow-sm">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={item.cover} alt={item.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-white truncate text-xs">{item.title}</p>
+                              <p className="text-[11px] text-white/50 truncate mt-0.5">{item.subtitle}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleAddCuratedEssential(item)}
+                            disabled={isSyncing}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ml-2 shrink-0 ${
+                              isAlreadyAdded
+                                ? 'bg-white/10 text-white/60 hover:text-white'
+                                : 'bg-white text-black hover:bg-white/90 active:scale-95 shadow-md'
+                            }`}
+                          >
+                            {isAlreadyAdded ? '✓ Added' : '+ Add'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: Backup & Restore */}
+              {syncTab === 'backup' && (
+                <div className="space-y-4">
+                  <p className="text-white/70 leading-relaxed">
+                    Export your custom playlists as a JSON backup, or import an existing backup file to restore your entire library across any phone, tablet, or browser.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <button
+                      onClick={handleExportLibrary}
+                      className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-center space-y-2 active:scale-95 transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/10 mx-auto flex items-center justify-center">
+                        <svg className="w-4 h-4 fill-none stroke-current text-white" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </div>
+                      <p className="font-bold text-white text-xs">Export Library (.json)</p>
+                      <p className="text-[10px] text-white/50">Save all custom playlists to file</p>
+                    </button>
+
+                    <label className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-center space-y-2 active:scale-95 transition-all cursor-pointer block">
+                      <div className="w-8 h-8 rounded-full bg-white/10 mx-auto flex items-center justify-center">
+                        <svg className="w-4 h-4 fill-none stroke-current text-white" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                      </div>
+                      <p className="font-bold text-white text-xs">Import Library (.json)</p>
+                      <p className="text-[10px] text-white/50">Upload previous backup file</p>
+                      <input
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const content = ev.target?.result as string;
+                              if (content) handleImportLibraryJson(content);
+                            };
+                            reader.readAsText(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Notice */}
+            <div className="border-t border-white/10 pt-3 flex items-center justify-between text-[11px] text-white/40 shrink-0">
+              <span>Supports YouTube Music and YouTube public/unlisted libraries</span>
+              <button
+                type="button"
+                onClick={() => setShowSyncModal(false)}
+                className="text-white/60 hover:text-white font-semibold"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

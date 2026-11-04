@@ -48,8 +48,15 @@ export default function StandByMusicPage() {
     toggleFullscreen,
   } = useFullscreen();
 
-  // Active StandBy mode if orientation is landscape OR manual trigger OR cinema mode
-  const isStandByActive = isLandscape || manualStandBy || isCinemaMode;
+  const [isStandByDismissed, setIsStandByDismissed] = useState<boolean>(false);
+
+  // Active StandBy mode if orientation is landscape OR manual trigger OR cinema mode, unless dismissed
+  const isStandByActive = !isStandByDismissed && (isLandscape || manualStandBy || isCinemaMode);
+
+  // Reset dismissal when orientation physically changes
+  useEffect(() => {
+    setIsStandByDismissed(false);
+  }, [isLandscape]);
 
   // Screen wake lock during active playback
   const isPlaying = playerState.status === 'playing';
@@ -65,15 +72,18 @@ export default function StandByMusicPage() {
   );
 
   const handleEnterStandBy = () => {
+    setIsStandByDismissed(false);
     setManualStandBy(true);
   };
 
   const handleEnterCinemaMode = () => {
+    setIsStandByDismissed(false);
     setIsCinemaMode(true);
     setManualStandBy(true);
   };
 
   const handleExitStandBy = async () => {
+    setIsStandByDismissed(true);
     setManualStandBy(false);
     setIsCinemaMode(false);
     if (isFullscreen) {
@@ -137,11 +147,15 @@ export default function StandByMusicPage() {
           playerState={playerState}
           isFullscreen={isFullscreen}
           onSelectTrack={playTrack}
+          onPlayTrack={playTrack}
           onPlayPlaylist={playPlaylist}
           onAddToQueue={addToQueue}
           onRemoveFromQueue={removeFromQueue}
           onTogglePlay={togglePlay}
           onNextTrack={nextTrack}
+          onNext={nextTrack}
+          onPrev={prevTrack}
+          onSeek={seekTo}
           onEnterStandBy={handleEnterStandBy}
           onEnterCinemaMode={handleEnterCinemaMode}
           onToggleFullscreen={toggleFullscreen}

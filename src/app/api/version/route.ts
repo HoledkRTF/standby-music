@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   return NextResponse.json(
     {
-      version: '1.0.4',
-      codename: 'zenith-tag',
+      version: '1.0.5',
+      codename: 'zenith-omni',
       timestamp: Date.now(),
     },
     {

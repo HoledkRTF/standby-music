@@ -155,7 +155,7 @@ export const StandByView: React.FC<StandByViewProps> = ({
               className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all active:scale-95 border border-white/10 shrink-0"
               title="App Version - Tap to refresh"
             >
-              v1.0.4
+              v1.0.5
             </button>
           </div>
 
@@ -436,7 +436,7 @@ export const StandByView: React.FC<StandByViewProps> = ({
                 className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all active:scale-95 border border-white/10"
                 title="App Version - Tap to refresh"
               >
-                v1.0.4
+                v1.0.5
               </button>
 
               {/* Close StandBy */}
