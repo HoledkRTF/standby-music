@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-
-const CURRENT_APP_VERSION = '1.0.4-zenith-tag';
+import { CURRENT_BUILD_ID } from '@/data/version';
 
 export function usePwaUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [latestVersion, setLatestVersion] = useState(CURRENT_APP_VERSION);
+  const [latestVersion, setLatestVersion] = useState(CURRENT_BUILD_ID);
 
   const checkVersion = useCallback(async () => {
     try {
@@ -20,12 +19,19 @@ export function usePwaUpdate() {
       if (res.ok) {
         const data = await res.json();
         const serverVersion = `${data.version}-${data.codename}`;
-        if (serverVersion && serverVersion !== CURRENT_APP_VERSION) {
-          console.log(`[PWA Update] New version detected: ${serverVersion} (current: ${CURRENT_APP_VERSION})`);
+        if (serverVersion && serverVersion !== CURRENT_BUILD_ID) {
+          console.log(`[PWA Update] New version detected: ${serverVersion} (current: ${CURRENT_BUILD_ID})`);
           setUpdateAvailable(true);
           setLatestVersion(serverVersion);
-          // Hard reload with cache-bust to ensure iOS WebClip loads latest code
-          window.location.replace(`/?v=${Date.now()}`);
+
+          // Guard against infinite reload loops: reload at most once per version in this session
+          if (typeof window !== 'undefined' && window.sessionStorage) {
+            const alreadyReloaded = sessionStorage.getItem('pwa_auto_reload_version');
+            if (alreadyReloaded !== serverVersion) {
+              sessionStorage.setItem('pwa_auto_reload_version', serverVersion);
+              window.location.replace(`/?v=${Date.now()}`);
+            }
+          }
         }
       }
     } catch {
@@ -65,7 +71,7 @@ export function usePwaUpdate() {
   }, [checkVersion]);
 
   return {
-    currentVersion: CURRENT_APP_VERSION,
+    currentVersion: CURRENT_BUILD_ID,
     latestVersion,
     updateAvailable,
     forceRefresh,

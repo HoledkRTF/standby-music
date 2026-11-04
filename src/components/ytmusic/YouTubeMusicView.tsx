@@ -7,6 +7,7 @@ import { PlaylistDetailModal } from './PlaylistDetailModal';
 import { NewPlaylistModal } from './NewPlaylistModal';
 import { EqualizerBars } from '../standby/EqualizerBars';
 import { formatTime, extractPlaylistId } from '@/utils/youtube';
+import { APP_VERSION } from '@/data/version';
 
 interface YouTubeMusicViewProps {
   playerState: PlayerState;
@@ -528,7 +529,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       : 0;
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#030303] text-white flex flex-col justify-between overflow-x-hidden select-none font-sans">
+    <div className="relative w-full h-full bg-[#030303] text-white flex flex-col justify-between overflow-hidden select-none font-sans">
       {/* Top YouTube Music Bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top,14px))] pb-3 bg-[#030303]/90 backdrop-blur-2xl border-b border-white/5">
         <div className="flex items-center space-x-2.5">
@@ -546,7 +547,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
             className="text-[10px] font-mono tracking-wider px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all active:scale-95 border border-white/10 ml-1"
             title="App Version - Tap to refresh"
           >
-            v1.0.5
+            v{APP_VERSION}
           </button>
         </div>
 
@@ -580,7 +581,7 @@ export const YouTubeMusicView: React.FC<YouTubeMusicViewProps> = ({
       </header>
 
       {/* Main Body by Tab */}
-      <main className="flex-1 overflow-y-auto px-4 pb-36 space-y-7 pt-2 max-w-lg mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-4 pb-36 space-y-7 pt-2 max-w-lg mx-auto w-full overscroll-y-contain">
         {/* Category Filter Pills (Home & Explore) */}
         {activeTab !== 'search' && (
           <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 pt-1">

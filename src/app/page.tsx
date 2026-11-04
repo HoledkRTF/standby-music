@@ -106,7 +106,7 @@ export default function StandByMusicPage() {
   }, [isStandByActive, togglePlay]);
 
   return (
-    <main className="relative min-h-[100dvh] w-full overflow-hidden select-none bg-black">
+    <main className="fixed inset-0 w-full h-[100dvh] overflow-hidden select-none bg-black">
       {/* Dynamic Ambient Fluid Mesh Glow (visible behind album art & letterboxed cinema) */}
       <AmbientBackground palette={palette} isNightMode={isNightMode} />
 

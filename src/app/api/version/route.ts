@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
+import { APP_VERSION, APP_CODENAME } from '@/data/version';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return NextResponse.json(
     {
-      version: '1.0.5',
-      codename: 'zenith-omni',
+      version: APP_VERSION,
+      codename: APP_CODENAME,
       timestamp: Date.now(),
     },
     {
