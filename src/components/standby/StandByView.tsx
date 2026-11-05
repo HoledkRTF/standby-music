@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlbumArt } from './AlbumArt';
 import { SyncedLyrics } from './SyncedLyrics';
 import { EqualizerBars } from './EqualizerBars';
 import { PlayerState, LyricsData } from '../../types/music';
@@ -321,19 +320,14 @@ export const StandByView: React.FC<StandByViewProps> = ({
           : 'flex flex-col items-center justify-between p-6 pt-[max(2.5rem,env(safe-area-inset-top,40px))] pb-[max(2.5rem,env(safe-area-inset-bottom,40px))]'
       }`}
     >
-      {/* Left Column: Big Aspect-Square Album Artwork */}
+      {/* Left Column: Big Aspect-Square Album Artwork Spacer (Underneath Live Player) */}
       <div
         className={`${
           isLandscape ? 'h-full max-h-[370px] aspect-square' : 'w-full max-w-[300px] aspect-square'
-        } flex items-center justify-center shrink-0`}
+        } flex items-center justify-center shrink-0 opacity-0 pointer-events-none`}
+        aria-hidden="true"
       >
-        <AlbumArt
-          thumbnailUrl={currentTrack.thumbnail}
-          title={currentTrack.title}
-          isPlaying={isPlaying}
-          isNightMode={isNightMode}
-          isLandscape={isLandscape}
-        />
+        <div className="w-full h-full aspect-square" />
       </div>
 
       {/* Right Column: Apple StandBy Player Controls or Synced Lyrics */}

@@ -120,10 +120,13 @@ export default function StandByMusicPage() {
       {/* Dynamic Ambient Fluid Mesh Glow (visible behind album art & letterboxed cinema) */}
       <AmbientBackground palette={palette} isNightMode={isNightMode} />
 
-      {/* YouTube Video / Audio Engine (hidden audio engine or fullscreen cinema video) */}
+      {/* YouTube Video / Audio Engine (visible in-viewport to suppress Dynamic Island) */}
       <HiddenPlayer
         videoId={playerState.currentTrack?.id}
+        thumbnailUrl={playerState.currentTrack?.thumbnail}
         isCinemaMode={isCinemaMode}
+        isStandByActive={isStandByActive}
+        isLandscape={isLandscape}
         onReady={onPlayerReady}
         onStateChange={onPlayerStateChange}
         onError={onPlayerError}

@@ -1,9 +1,9 @@
 ## Recent Codenames
-1. **zenith-clean** (Commit `5110dd7`, v1.0.8): Suppressed Dynamic Island media session hijacking via HTTP Permissions-Policy `mediasession=()`, iframe allow restriction, and client-side mediaSession metadata purging.
-2. **zenith-native** (Commit `352fc5b`, v1.0.7): Pre-loaded authentic 12 YouTube Music playlists (259 tracks) for @HoledkRTF into default library with Mix queue initialization, purged legacy mock tracks, 30s auto-refresh polling, and full-cache-purge version badges.
-3. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
-4. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
-5. **zenith-tag** (Commit `f9306ad`, v1.0.4): Visible on-screen version numbers (`v1.0.4`) across StandBy, Cinema, and Portrait headers with one-tap hard cache refresh, and PWA auto-updater (`/api/version`).
+1. **zenith-view** (Commit `TBD`, v1.0.9): Integrated YouTube player directly into in-viewport album art frame with opacity 1, eliminating invisible-media WebKit classification and suppressing iOS Dynamic Island Now Playing hijacking.
+2. **zenith-clean** (Commit `5110dd7`, v1.0.8): Suppressed Dynamic Island media session hijacking via HTTP Permissions-Policy `mediasession=()`, iframe allow restriction, and client-side mediaSession metadata purging.
+3. **zenith-native** (Commit `352fc5b`, v1.0.7): Pre-loaded authentic 12 YouTube Music playlists (259 tracks) for @HoledkRTF into default library with Mix queue initialization, purged legacy mock tracks, 30s auto-refresh polling, and full-cache-purge version badges.
+4. **zenith-stride** (Commit `4ea3f78`, v1.0.6): Eradicated mobile PWA auto-reload loop by unifying version via single source of truth (`src/data/version.ts`), added session-guarded version refresh, and secured viewport scroll stability with fixed frame containment.
+5. **zenith-omni** (Commit `70d7528`, v1.0.5): Desktop close button fix via state dismissal override, mobile app prop wiring & crash prevention, multi-method YouTube Music library sync (channel @handle discovery, bulk links textarea, curated flagship charts, JSON backup/restore), and lazy-loading playlist track caching.
 
 ## Rules
 - **Commit & Push Workflow**: When instructed to save, commit, or back up code, you must ALWAYS run both `git commit` AND `git push` sequentially. Never leave a commit unpushed. Always explicitly mention the Git commit hash in your response after a successful push.
